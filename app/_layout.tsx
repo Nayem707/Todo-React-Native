@@ -6,6 +6,8 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Provider, useDispatch, useSelector } from "react-redux";
 
+import "../global.css";
+
 import { loadTodosFromStorage, saveTodosToStorage } from "../lib/todoStorage";
 import { store } from "../store";
 import { loadTodos } from "../store/todosSlice";

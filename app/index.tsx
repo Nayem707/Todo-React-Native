@@ -83,11 +83,11 @@ export default function HomeScreen() {
   };
 
   return (
-    <View className="flex-1 bg-slate-950">
+    <View className="flex-1">
       <View className="absolute inset-x-0 top-0 h-64 bg-sky-500/20" />
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pb-32 pt-16"
+        contentContainerClassName="px-4 pb-24 pt-8"
       >
         <View className="rounded-[36px] bg-slate-900 px-5 py-6 shadow-glow">
           <Text className="text-sm font-semibold uppercase tracking-[4px] text-sky-300">
