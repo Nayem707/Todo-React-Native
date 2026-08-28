@@ -1,5 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
@@ -9,11 +8,18 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 import "../global.css";
 
 import { loadTodosFromStorage, saveTodosToStorage } from "../lib/todoStorage";
+import { BrandSplash } from "../components/BrandSplash";
 import { store } from "../store";
 import { loadTodos } from "../store/todosSlice";
 import type { RootState } from "../store";
 
-function TodoBootstrap({ children }: { children: ReactNode }) {
+function TodoBootstrap({
+  children,
+  onReadyChange,
+}: {
+  children: ReactNode;
+  onReadyChange: (isReady: boolean) => void;
+}) {
   const dispatch = useDispatch();
   const todos = useSelector((state: RootState) => state.todos.items);
   const [isReady, setIsReady] = useState(false);
@@ -48,42 +54,68 @@ function TodoBootstrap({ children }: { children: ReactNode }) {
     void saveTodosToStorage(todos);
   }, [isReady, todos]);
 
+  useEffect(() => {
+    onReadyChange(isReady);
+  }, [isReady, onReadyChange]);
+
   if (!isReady) {
-    return (
-      <View className="flex-1 items-center justify-center bg-slate-950 px-6">
-        <View className="items-center rounded-[32px] bg-white/10 px-8 py-10">
-          <Text className="text-lg font-semibold text-white">
-            Loading todos
-          </Text>
-          <ActivityIndicator className="mt-4" color="#7dd3fc" />
-        </View>
-      </View>
-    );
+    return null;
   }
 
   return children;
 }
 
 export default function RootLayout() {
+  const [isDataReady, setIsDataReady] = useState(false);
+  const [isSplashDone, setIsSplashDone] = useState(false);
+
+  const handleBootstrapReady = useCallback((isReady: boolean) => {
+    setIsDataReady(isReady);
+  }, []);
+
+  useEffect(() => {
+    // Keep splash visible for 5 seconds
+    const timer = setTimeout(() => {
+      setIsSplashDone(true);
+    }, 5000);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, []);
+
+  // Splash stays until:
+  // 1. Todo data is loaded
+  // 2. 5 seconds have passed
+  const shouldShowSplash = !isDataReady || !isSplashDone;
+
   return (
     <Provider store={store}>
       <SafeAreaProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <TodoBootstrap>
-            <StatusBar style="dark" />
+          {/* Main app content */}
+          <TodoBootstrap onReadyChange={handleBootstrapReady}>
+            <StatusBar style="light" />
+
             <Stack
               screenOptions={{
                 headerShown: false,
-                contentStyle: { backgroundColor: "#F8FAFC" },
+                contentStyle: {
+                  backgroundColor: "#F8FAFC",
+                },
               }}
             >
               <Stack.Screen name="index" />
+
               <Stack.Screen
                 name="todo-form"
                 options={{ presentation: "modal" }}
               />
             </Stack>
           </TodoBootstrap>
+
+          {/* Splash overlay */}
+          {shouldShowSplash && <BrandSplash onFinish={() => {}} />}
         </GestureHandlerRootView>
       </SafeAreaProvider>
     </Provider>
