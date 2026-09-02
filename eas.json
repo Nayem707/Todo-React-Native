@@ -9,10 +9,7 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      }
+      "distribution": "internal"
     },
     "production": {
       "autoIncrement": true
@@ -20,15 +17,5 @@
   },
   "submit": {
     "production": {}
-  },
-  "extra": {
-    "eas": {
-      "projectId": "bf482167-f417-46e5-b8f1-d45ea876fd27"
-    }
-  },
-  "expo": {
-    "android": {
-      "package": "com.nayem490.mobileapp"
-    }
   }
 }
