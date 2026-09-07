@@ -11,7 +11,7 @@
     "build": "echo \"No build step (plain ESM). Add a bundler if targeting a runtime without Node 20.\"",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
-    "test": "NODE_ENV=test node --test tests/**/*.test.js"
+    "test": "node --env-file=.env.test --test tests/**/*.test.js"
   },
   "dependencies": {
     "argon2": "^0.41.1",

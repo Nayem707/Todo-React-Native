@@ -1,65 +1,21 @@
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { conversationService } from "./conversation.service.js";
-import { messageService } from "../message/message.service.js";
-import { friendshipService } from "../friends/friendship.service.js";
-import { ForbiddenError } from "../../errors/AppError.js";
+import { created, ok } from "../../utils/httpResponse.js";
 
 export const conversationController = {
   list: asyncHandler(async (req, res) => {
-    const conversations = await conversationService.getForUser(req.user.id);
-    res.json({ success: true, data: conversations });
+    ok(res, await conversationService.getForUser(req.user.id));
   }),
 
   create: asyncHandler(async (req, res) => {
-    const { userId: otherUserId, type = "DIRECT" } = req.body || {};
-    if (!otherUserId) {
-      const error = new Error("A userId is required to start a conversation.");
-      error.status = 400;
-      throw error;
-    }
-
-    if (type === "DIRECT") {
-      const friends = await friendshipService.areFriends(
-        req.user.id,
-        otherUserId,
-      );
-      if (!friends)
-        throw new ForbiddenError(
-          "You can only start a direct conversation with accepted friends.",
-        );
-
-      const created = await conversationService.createDirect(
-        req.user.id,
-        otherUserId,
-      );
-      const conversations = await conversationService.getForUser(req.user.id);
-      const payload = conversations.find(
-        (conversation) =>
-          conversation.id === (created._id?.toString?.() || created.id),
-      );
-      res.status(201).json({ success: true, data: payload });
-      return;
-    }
-
-    const error = new Error(
-      "Only direct conversations are supported in this route.",
+    const payload = await conversationService.createDirect(
+      req.user.id,
+      req.body.userId,
     );
-    error.status = 400;
-    throw error;
+    created(res, payload);
   }),
 
   getById: asyncHandler(async (req, res) => {
-    const conversation = await conversationService.getById(req.params.id);
-    if (!conversation) {
-      const error = new Error("Conversation not found.");
-      error.status = 404;
-      throw error;
-    }
-    const conversations = await conversationService.getForUser(req.user.id);
-    res.json({
-      success: true,
-      data:
-        conversations.find((item) => item.id === req.params.id) || conversation,
-    });
+    ok(res, await conversationService.getByIdForUser(req.params.id, req.user.id));
   }),
 };

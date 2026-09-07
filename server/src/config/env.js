@@ -2,8 +2,17 @@
  * Central, validated environment configuration.
  * Fail-fast on startup if required variables are missing/invalid.
  */
-import "dotenv/config";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import dotenv from "dotenv";
 import { z } from "zod";
+
+const testEnvPath = path.resolve(process.cwd(), ".env.test");
+if (process.env.NODE_ENV === "test" && existsSync(testEnvPath)) {
+  dotenv.config({ path: testEnvPath, override: true });
+} else {
+  dotenv.config();
+}
 
 const boolFromString = z
   .union([z.boolean(), z.string()])
@@ -49,7 +58,24 @@ const schema = z.object({
   STORAGE_PUBLIC_BASE_URL: z.string().optional(),
 });
 
-const parsed = schema.safeParse(process.env);
+const parsed = schema
+  .superRefine((data, ctx) => {
+    if (data.NODE_ENV !== "production") return;
+    for (const key of [
+      "JWT_ACCESS_SECRET",
+      "JWT_REFRESH_SECRET",
+      "COOKIE_SECRET",
+    ]) {
+      if (data[key].length < 32) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [key],
+          message: `${key} must be at least 32 characters in production`,
+        });
+      }
+    }
+  })
+  .safeParse(process.env);
 
 if (!parsed.success) {
   const issues = parsed.error.issues

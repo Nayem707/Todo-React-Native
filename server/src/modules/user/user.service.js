@@ -12,7 +12,6 @@ export const sanitizeUser = (user) => {
     bio: user.bio || "",
     avatar: user.avatarUrl || user.avatar || "",
     coverUrl: user.coverUrl || "",
-    color: user.color || "from-violet-500 to-indigo-500",
     status: user.status || (user.isOnline ? "online" : "offline"),
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,

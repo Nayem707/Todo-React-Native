@@ -9,234 +9,213 @@ after(async () => {
   await mongoose.disconnect();
 });
 
-test("register -> login -> user search -> create conversation -> messages -> group -> logout flow", async (t) => {
-  const app = await createApp();
-
-  const unique = Date.now();
-  const userA = {
-    name: "Alice Demo",
-    email: `alice.${unique}@example.com`,
+const registerUser = async (app, name, email) => {
+  const response = await request(app).post("/api/auth/register").send({
+    name,
+    email,
     password: "Password123!",
-  };
-
-  const userB = {
-    name: "Bob Demo",
-    email: `bob.${unique}@example.com`,
-    password: "Password123!",
-  };
-
-  const registerA = await request(app).post("/api/auth/register").send(userA);
-  assert.equal(registerA.status, 201);
-  assert.equal(registerA.body.success, true);
-
-  const registerB = await request(app).post("/api/auth/register").send(userB);
-  assert.equal(registerB.status, 201);
-  assert.equal(registerB.body.success, true);
-
-  const loginA = await request(app).post("/api/auth/login").send({
-    email: userA.email,
-    password: userA.password,
   });
+  assert.equal(response.status, 201, response.body.message);
+  assert.equal(response.body.success, true);
+  assert.ok(response.body.data.accessToken);
+  assert.ok(response.body.data.refreshToken);
+  return response;
+};
 
-  assert.equal(loginA.status, 200);
-  assert.equal(loginA.body.success, true);
-  assert.ok(loginA.headers["set-cookie"]?.length);
+const cookieHeader = (response) =>
+  response.headers["set-cookie"]?.map((part) => part.split(";")[0]).join("; ");
 
-  const cookie = loginA.headers["set-cookie"][0].split(";")[0];
+test("auth, friendship, conversation, messages, group, and authorization", async () => {
+  const app = await createApp();
+  const unique = Date.now();
 
-  const me = await request(app).get("/api/auth/me").set("Cookie", cookie);
+  const registerA = await registerUser(
+    app,
+    "Alice Demo",
+    `alice.${unique}@example.com`,
+  );
+  const registerB = await registerUser(
+    app,
+    "Bob Demo",
+    `bob.${unique}@example.com`,
+  );
+  const registerC = await registerUser(
+    app,
+    "Carol Demo",
+    `carol.${unique}@example.com`,
+  );
 
+  const userAId = registerA.body.data.user.id;
+  const userBId = registerB.body.data.user.id;
+  const cookieA = cookieHeader(registerA);
+  const cookieB = cookieHeader(registerB);
+  const cookieC = cookieHeader(registerC);
+  const tokenC = registerC.body.data.accessToken;
+
+  const me = await request(app).get("/api/auth/me").set("Cookie", cookieA);
   assert.equal(me.status, 200);
-  assert.equal(me.body.success, true);
-  assert.equal(me.body.data.email, userA.email);
+  assert.equal(me.body.data.email, `alice.${unique}@example.com`);
 
-  const search = await request(app)
-    .get("/api/users/search?q=bob")
-    .set("Cookie", cookie);
+  const blockedConversation = await request(app)
+    .post("/api/conversations")
+    .set("Cookie", cookieA)
+    .send({ userId: userBId, type: "DIRECT" });
+  assert.equal(blockedConversation.status, 403);
 
-  assert.equal(search.status, 200);
-  assert.equal(search.body.success, true);
-  assert.ok(Array.isArray(search.body.data));
+  const requestAb = await request(app)
+    .post("/api/friends/request")
+    .set("Cookie", cookieA)
+    .send({ recipientId: userBId });
+  assert.equal(requestAb.status, 201);
+  const requestId = requestAb.body.data.id;
+
+  const accept = await request(app)
+    .patch(`/api/friends/${requestId}/accept`)
+    .set("Cookie", cookieB);
+  assert.equal(accept.status, 200);
+  assert.equal(accept.body.data.status, "ACCEPTED");
 
   const conversation = await request(app)
     .post("/api/conversations")
-    .set("Cookie", cookie)
-    .send({ userId: registerB.body.data.user.id, type: "DIRECT" });
-
+    .set("Cookie", cookieA)
+    .send({ userId: userBId, type: "DIRECT" });
   assert.equal(conversation.status, 201);
-  assert.equal(conversation.body.success, true);
   assert.equal(conversation.body.data.type, "DIRECT");
-
   const conversationId = conversation.body.data.id;
+
+  const hidden = await request(app)
+    .get(`/api/conversations/${conversationId}`)
+    .set("Authorization", `Bearer ${tokenC}`);
+  assert.equal(hidden.status, 404);
+
   const firstMessage = await request(app)
     .post(`/api/conversations/${conversationId}/messages`)
-    .set("Cookie", cookie)
+    .set("Cookie", cookieA)
     .send({ content: "Hello there!" });
-
   assert.equal(firstMessage.status, 201);
-  assert.equal(firstMessage.body.success, true);
-  assert.equal(firstMessage.body.data.content, "Hello there!");
+  assert.equal(firstMessage.body.data.senderId, userAId);
+
+  const strangerMessage = await request(app)
+    .post(`/api/conversations/${conversationId}/messages`)
+    .set("Cookie", cookieC)
+    .send({ content: "I should not be here" });
+  assert.equal(strangerMessage.status, 404);
 
   const messages = await request(app)
     .get(`/api/conversations/${conversationId}/messages?page=1&limit=10`)
-    .set("Cookie", cookie);
-
+    .set("Cookie", cookieA);
   assert.equal(messages.status, 200);
-  assert.equal(messages.body.success, true);
   assert.ok(messages.body.data.items.length >= 1);
 
   const group = await request(app)
     .post("/api/groups")
-    .set("Cookie", cookie)
+    .set("Cookie", cookieA)
     .send({
       name: "Demo Crew",
       description: "Test group",
-      memberIds: [registerB.body.data.user.id],
+      memberIds: [userBId],
     });
-
   assert.equal(group.status, 201);
-  assert.equal(group.body.success, true);
   assert.equal(group.body.data.name, "Demo Crew");
-
   const groupId = group.body.data.id;
+
   const groupDetails = await request(app)
     .get(`/api/groups/${groupId}`)
-    .set("Cookie", cookie);
-
+    .set("Cookie", cookieA);
   assert.equal(groupDetails.status, 200);
-  assert.equal(groupDetails.body.success, true);
-  assert.equal(groupDetails.body.data.name, "Demo Crew");
+
+  const strangerGroup = await request(app)
+    .get(`/api/groups/${groupId}`)
+    .set("Cookie", cookieC);
+  assert.equal(strangerGroup.status, 404);
 
   const logout = await request(app)
     .post("/api/auth/logout")
-    .set("Cookie", cookie);
+    .set("Cookie", cookieA);
   assert.equal(logout.status, 200);
-  assert.equal(logout.body.success, true);
+
+  const afterLogout = await request(app)
+    .get("/api/auth/me")
+    .set("Cookie", cookieA);
+  assert.equal(afterLogout.status, 401);
 });
 
-test("message sender ID consistency (alignment bug fix)", async () => {
+test("message sender ID consistency", async () => {
   const app = await createApp();
-
   const unique = Date.now() + 2;
-  const userA = {
-    name: "Alice Alignment Test",
-    email: `alice-align.${unique}@example.com`,
-    password: "Password123!",
-  };
 
-  const userB = {
-    name: "Bob Alignment Test",
-    email: `bob-align.${unique}@example.com`,
-    password: "Password123!",
-  };
-
-  const registerA = await request(app).post("/api/auth/register").send(userA);
-  assert.equal(registerA.status, 201);
+  const registerA = await registerUser(
+    app,
+    "Alice Alignment Test",
+    `alice-align.${unique}@example.com`,
+  );
+  const registerB = await registerUser(
+    app,
+    "Bob Alignment Test",
+    `bob-align.${unique}@example.com`,
+  );
   const userAId = registerA.body.data.user.id;
-  assert.ok(typeof userAId === "string", "User ID should be a string");
+  const cookieA = cookieHeader(registerA);
+  const cookieB = cookieHeader(registerB);
 
-  const registerB = await request(app).post("/api/auth/register").send(userB);
-  assert.equal(registerB.status, 201);
+  const friendRequest = await request(app)
+    .post("/api/friends/request")
+    .set("Cookie", cookieA)
+    .send({ recipientId: registerB.body.data.user.id });
+  assert.equal(friendRequest.status, 201);
 
-  const loginA = await request(app).post("/api/auth/login").send({
-    email: userA.email,
-    password: userA.password,
-  });
-
-  assert.equal(loginA.status, 200);
-  const cookie = loginA.headers["set-cookie"][0].split(";")[0];
-
-  const me = await request(app).get("/api/auth/me").set("Cookie", cookie);
-  assert.equal(me.status, 200);
-  assert.equal(me.body.data.id, userAId, "Current user ID should match");
+  const accept = await request(app)
+    .patch(`/api/friends/${friendRequest.body.data.id}/accept`)
+    .set("Cookie", cookieB);
+  assert.equal(accept.status, 200);
 
   const conversation = await request(app)
     .post("/api/conversations")
-    .set("Cookie", cookie)
+    .set("Cookie", cookieA)
     .send({ userId: registerB.body.data.user.id, type: "DIRECT" });
-
   assert.equal(conversation.status, 201);
-  const conversationId = conversation.body.data.id;
 
-  // Send a message
   const sentMessage = await request(app)
-    .post(`/api/conversations/${conversationId}/messages`)
-    .set("Cookie", cookie)
+    .post(`/api/conversations/${conversation.body.data.id}/messages`)
+    .set("Cookie", cookieA)
     .send({ content: "Alignment test message" });
-
   assert.equal(sentMessage.status, 201);
-  assert.equal(sentMessage.body.success, true);
-  const createdMessageSenderId = sentMessage.body.data.senderId;
+  assert.equal(sentMessage.body.data.senderId, userAId);
 
-  // Verify: created message sender ID should match current user ID
-  assert.equal(
-    createdMessageSenderId,
-    userAId,
-    "Created message senderId should match current user ID",
-  );
-  assert.equal(
-    typeof createdMessageSenderId,
-    "string",
-    "Message senderId should be a string",
-  );
-
-  // Retrieve messages
   const messages = await request(app)
-    .get(`/api/conversations/${conversationId}/messages?page=1&limit=10`)
-    .set("Cookie", cookie);
-
-  assert.equal(messages.status, 200);
-  assert.ok(messages.body.data.items.length >= 1);
-
-  // Verify: all retrieved messages have correct sender ID format
-  const messageFromList = messages.body.data.items.find(
-    (m) => m.id === sentMessage.body.data.id,
+    .get(`/api/conversations/${conversation.body.data.id}/messages?page=1&limit=10`)
+    .set("Cookie", cookieA);
+  const listed = messages.body.data.items.find(
+    (item) => item.id === sentMessage.body.data.id,
   );
-  assert.ok(messageFromList, "Sent message should be in the list");
-  assert.equal(
-    messageFromList.senderId,
-    userAId,
-    "Retrieved message senderId should match current user ID",
-  );
-  assert.equal(
-    typeof messageFromList.senderId,
-    "string",
-    "Retrieved message senderId should be a string",
-  );
-
-  // Verify: consistency between created and retrieved messages
-  assert.equal(
-    messageFromList.senderId,
-    createdMessageSenderId,
-    "Sender ID should be consistent between created and retrieved messages",
-  );
+  assert.ok(listed);
+  assert.equal(listed.senderId, userAId);
 });
 
-test("missing group route returns 404", async () => {
+test("refresh rotates tokens and missing group is 404", async () => {
   const app = await createApp();
+  const unique = Date.now() + 3;
+  const register = await registerUser(
+    app,
+    "Grace Demo",
+    `grace.${unique}@example.com`,
+  );
+  const cookie = cookieHeader(register);
 
-  const unique = Date.now() + 1;
-  const user = {
-    name: "Grace Demo",
-    email: `grace.${unique}@example.com`,
-    password: "Password123!",
-  };
-
-  const register = await request(app).post("/api/auth/register").send(user);
-  assert.equal(register.status, 201);
-
-  const login = await request(app).post("/api/auth/login").send({
-    email: user.email,
-    password: user.password,
-  });
-
-  assert.equal(login.status, 200);
-  const cookie = login.headers["set-cookie"][0].split(";")[0];
+  const refresh = await request(app)
+    .post("/api/auth/refresh")
+    .set("Cookie", cookie)
+    .send({ refreshToken: register.body.data.refreshToken });
+  assert.equal(refresh.status, 200);
+  assert.ok(refresh.body.data.accessToken);
+  assert.notEqual(
+    refresh.body.data.accessToken,
+    register.body.data.accessToken,
+  );
 
   const missingGroup = await request(app)
-    .get("/api/groups/conversation_missing_id")
-    .set("Cookie", cookie);
-
+    .get("/api/groups/aaaaaaaaaaaaaaaaaaaaaaaa")
+    .set("Cookie", cookieHeader(refresh));
   assert.equal(missingGroup.status, 404);
   assert.equal(missingGroup.body.success, false);
   assert.equal(missingGroup.body.message, "Group not found.");

@@ -1,4 +1,3 @@
-// Load .env before any config module reads process.env. No-op when file is absent.
 import "dotenv/config";
 
 import http from "node:http";
@@ -14,7 +13,6 @@ const start = async () => {
   const app = await createApp();
   const httpServer = http.createServer(app);
 
-  // Socket.IO shares the same HTTP server so cookies/origin behave consistently.
   const io = createSocketServer(httpServer);
   app.set("io", io);
 
@@ -22,10 +20,32 @@ const start = async () => {
     logger.info({ env: env.NODE_ENV, port: env.PORT }, "Server started");
   });
 
+  let shuttingDown = false;
   const shutdown = async (signal) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
     logger.info({ signal }, "Shutting down");
-    server.close(() => logger.info("HTTP server closed"));
-    io.close(() => logger.info("Socket.IO closed"));
+
+    const forceTimer = setTimeout(() => {
+      logger.fatal("Graceful shutdown timed out");
+      process.exit(1);
+    }, 10_000);
+    forceTimer.unref();
+
+    await new Promise((resolve) => {
+      server.close(() => {
+        logger.info("HTTP server closed");
+        resolve();
+      });
+    });
+
+    await new Promise((resolve) => {
+      io.close(() => {
+        logger.info("Socket.IO closed");
+        resolve();
+      });
+    });
+
     await disconnectDatabase();
     process.exit(0);
   };

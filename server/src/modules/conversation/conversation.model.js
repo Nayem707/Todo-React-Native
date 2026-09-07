@@ -63,6 +63,7 @@ const conversationSchema = new mongoose.Schema(
 
 conversationSchema.index({ type: 1 });
 conversationSchema.index({ lastMessageAt: -1 });
+conversationSchema.index({ "members.user": 1, "members.leftAt": 1 });
 
 export const ConversationModel = mongoose.model(
   "Conversation",

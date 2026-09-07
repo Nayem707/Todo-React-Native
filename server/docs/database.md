@@ -1,6 +1,6 @@
 # Database
 
-MongoDB via Prisma. See [../server/prisma/schema.prisma](../server/prisma/schema.prisma) for the source of truth.
+MongoDB via Mongoose. Models live under `src/modules/*/`.
 
 ## Collections
 

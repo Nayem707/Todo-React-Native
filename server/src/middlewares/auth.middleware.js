@@ -5,12 +5,17 @@ import { userRepository } from "../modules/user/user.repository.js";
 import { UnauthenticatedError } from "../errors/AppError.js";
 import { ERROR_CODES, COOKIE_NAMES } from "../constants/index.js";
 
-export const authenticate = asyncHandler(async (req, _res, next) => {
+const readAccessToken = (req) => {
   const authHeader = req.headers.authorization;
-  const cookieToken = req.cookies?.[COOKIE_NAMES.ACCESS_TOKEN];
-  const token = authHeader?.startsWith("Bearer ")
-    ? authHeader.slice(7)
-    : cookieToken;
+  if (authHeader?.startsWith("Bearer ")) return authHeader.slice(7);
+  return (
+    req.signedCookies?.[COOKIE_NAMES.ACCESS_TOKEN] ||
+    req.cookies?.[COOKIE_NAMES.ACCESS_TOKEN]
+  );
+};
+
+export const authenticate = asyncHandler(async (req, _res, next) => {
+  const token = readAccessToken(req);
 
   if (!token) {
     throw new UnauthenticatedError(
@@ -21,7 +26,7 @@ export const authenticate = asyncHandler(async (req, _res, next) => {
 
   const payload = verifyAccessToken(token);
 
-  if (authService.isTokenRevoked(payload.jti)) {
+  if (await authService.isTokenRevoked(payload.jti)) {
     throw new UnauthenticatedError(
       "Token has been revoked.",
       ERROR_CODES.AUTH_TOKEN_INVALID,

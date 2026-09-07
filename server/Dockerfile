@@ -15,7 +15,7 @@ ENV NODE_ENV=production \
     PORT=5000 \
     STORAGE_LOCAL_DIR=/app/uploads
 
-RUN apk add --no-cache tini \
+RUN apk add --no-cache tini wget \
     && addgroup -S app && adduser -S app -G app \
     && mkdir -p /app/uploads && chown app:app /app/uploads
 

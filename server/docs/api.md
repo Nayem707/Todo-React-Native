@@ -1,7 +1,7 @@
 # REST API
 
-> This document tracks the API surface as it grows phase-by-phase.
-> Phase 1 exposes only health endpoints; all others are placeholders.
+> REST surface for the chat server. Auth uses a short-lived access JWT
+> plus a rotated refresh token (`POST /api/auth/refresh`).
 
 ## Response envelopes
 
@@ -25,12 +25,12 @@
 | GET    | `/api/health/live`  | no   | Liveness probe (process is up).                 |
 | GET    | `/api/health/ready` | no   | Readiness probe (DB reachable, ready to serve). |
 
-## Coming next (Phase 2 — Auth)
+## Auth
 
 | Method | Path                 | Auth | Description                             |
 | ------ | -------------------- | ---- | --------------------------------------- |
 | POST   | `/api/auth/register` | no   | Create account.                         |
 | POST   | `/api/auth/login`    | no   | Set HTTP-only access + refresh cookies. |
-| POST   | `/api/auth/logout`   | yes  | Revoke refresh token; clear cookies.    |
+| POST   | `/api/auth/logout`   | yes  | Revoke access JTI + refresh family.     |
 | POST   | `/api/auth/refresh`  | rt   | Rotate refresh token, issue new access. |
 | GET    | `/api/auth/me`       | yes  | Current authenticated user.             |

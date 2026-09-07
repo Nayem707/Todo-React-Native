@@ -1,7 +1,16 @@
 import { messageRepository } from "./message.repository.js";
 import { conversationRepository } from "../conversation/conversation.repository.js";
 import { friendshipRepository } from "../friends/friendship.repository.js";
-import { ForbiddenError } from "../../errors/AppError.js";
+import {
+  assertMembership,
+  memberUserId,
+} from "../conversation/conversation.members.js";
+import {
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "../../errors/AppError.js";
+import { toId } from "../../utils/ids.js";
 
 const normalizeMessage = (message) => {
   if (!message) return null;
@@ -10,7 +19,6 @@ const normalizeMessage = (message) => {
     message.sender && typeof message.sender === "object"
       ? message.sender
       : null;
-  // After Mongoose schema transformation, sender has 'id' (string). Before transformation, it has '_id'.
   const senderId =
     sender?.id || sender?._id?.toString?.() || message.sender?.toString?.();
 
@@ -54,15 +62,34 @@ const normalizeMessage = (message) => {
   };
 };
 
+const requireConversation = async (conversationId, userId) => {
+  const conversation = await conversationRepository.findById(conversationId);
+  assertMembership(conversation, userId);
+  return conversation;
+};
+
+const requireOwnedMessage = async (conversationId, messageId, senderId) => {
+  await requireConversation(conversationId, senderId);
+  const existing = await messageRepository.findById(messageId);
+  if (!existing || toId(existing.conversation) !== conversationId) {
+    throw new NotFoundError("Message not found.");
+  }
+  if (toId(existing.sender) !== senderId) {
+    throw new ForbiddenError("You can only change your own messages.");
+  }
+  return existing;
+};
+
 export const messageService = {
   async list(conversationId, page, limit, currentUserId) {
+    await requireConversation(conversationId, currentUserId);
+
     const [total, items] = await Promise.all([
       messageRepository.countByConversation(conversationId),
       messageRepository.listByConversation({
         conversationId,
         page,
         limit,
-        currentUserId,
       }),
     ]);
 
@@ -84,25 +111,25 @@ export const messageService = {
     attachmentSize,
     attachmentMime,
   }) {
-    // Reject if sender is trying to message in a DIRECT conv without friendship.
-    const conversation = await conversationRepository.findById(conversationId);
-    if (conversation?.type === "DIRECT") {
-      const otherMember = conversation.members?.find((m) => {
-        const mId = m.user?._id?.toString?.() ?? m.user?.toString?.();
-        return mId && mId !== senderId;
-      });
-      const otherId =
-        otherMember?.user?._id?.toString?.() ?? otherMember?.user?.toString?.();
+    const conversation = await requireConversation(conversationId, senderId);
+
+    if (conversation.type === "DIRECT") {
+      const otherId = (conversation.members || [])
+        .map((member) => memberUserId(member))
+        .find((id) => id && id !== senderId);
       if (otherId) {
-        const friends = await friendshipRepository.areFriends(
-          senderId,
-          otherId,
-        );
-        if (!friends)
+        const friends = await friendshipRepository.areFriends(senderId, otherId);
+        if (!friends) {
           throw new ForbiddenError(
             "You can only send messages to accepted friends.",
           );
+        }
       }
+    }
+
+    const trimmed = content ? String(content).trim() : "";
+    if (!trimmed && !attachmentUrl) {
+      throw new ValidationError("A message is required.");
     }
 
     const type = attachmentUrl
@@ -114,7 +141,7 @@ export const messageService = {
     const message = await messageRepository.create({
       conversationId,
       senderId,
-      content: content ? String(content).trim() : "",
+      content: trimmed,
       type,
       attachmentUrl,
       attachmentName,
@@ -128,48 +155,22 @@ export const messageService = {
     return normalizeMessage(message);
   },
 
-  async update(messageId, senderId, content) {
-    const existing = await messageRepository.findById(messageId);
-    if (!existing) {
-      const error = new Error("Message not found.");
-      error.status = 404;
-      throw error;
-    }
-
-    if (existing.sender?.toString?.() !== senderId) {
-      const error = new Error("You can only edit your own messages.");
-      error.status = 403;
-      throw error;
-    }
-
+  async update(conversationId, messageId, senderId, content) {
+    await requireOwnedMessage(conversationId, messageId, senderId);
     const updated = await messageRepository.updateById(messageId, {
       content: String(content).trim(),
       editedAt: new Date(),
       editedBy: senderId,
     });
-
     return normalizeMessage(updated);
   },
 
-  async delete(messageId, senderId) {
-    const existing = await messageRepository.findById(messageId);
-    if (!existing) {
-      const error = new Error("Message not found.");
-      error.status = 404;
-      throw error;
-    }
-
-    if (existing.sender?.toString?.() !== senderId) {
-      const error = new Error("You can only delete your own messages.");
-      error.status = 403;
-      throw error;
-    }
-
+  async delete(conversationId, messageId, senderId) {
+    await requireOwnedMessage(conversationId, messageId, senderId);
     const updated = await messageRepository.updateById(messageId, {
       deletedAt: new Date(),
       content: "[deleted]",
     });
-
     return normalizeMessage(updated);
   },
 };

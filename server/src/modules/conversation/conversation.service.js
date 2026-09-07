@@ -1,10 +1,12 @@
 import { conversationRepository } from "./conversation.repository.js";
-import { userRepository } from "../user/user.repository.js";
-import { sanitizeUser } from "../user/user.service.js";
+import { friendshipRepository } from "../friends/friendship.repository.js";
+import { assertMembership, memberUserId } from "./conversation.members.js";
+import { ForbiddenError, ValidationError } from "../../errors/AppError.js";
+import { toId } from "../../utils/ids.js";
 
 const buildMemberMeta = (member) => {
   const user = member.user || member.userId;
-  const id = user?._id ? user._id.toString() : user?.id || member.userId;
+  const id = memberUserId(member);
   return {
     id,
     userId: id,
@@ -14,18 +16,15 @@ const buildMemberMeta = (member) => {
     status: user?.isOnline ? "online" : "offline",
     avatar: user?.avatarUrl || "",
     coverUrl: user?.coverUrl || "",
-    color: "from-violet-500 to-indigo-500",
   };
 };
 
-const buildConversationPayload = (conversation, currentUserId) => {
+export const buildConversationPayload = (conversation, currentUserId) => {
   const activeMembers = (conversation.members || []).filter(
     (member) => !member.leftAt,
   );
   const peer = activeMembers.find(
-    (member) =>
-      member.user?._id?.toString?.() !== currentUserId &&
-      member.user?._id?.toString?.() !== currentUserId,
+    (member) => memberUserId(member) !== currentUserId,
   );
   const title =
     conversation.type === "DIRECT"
@@ -33,7 +32,7 @@ const buildConversationPayload = (conversation, currentUserId) => {
       : conversation.name || "Group";
 
   return {
-    id: conversation._id?.toString?.() || conversation.id,
+    id: toId(conversation),
     type: conversation.type,
     name: title,
     title,
@@ -42,19 +41,22 @@ const buildConversationPayload = (conversation, currentUserId) => {
       conversation.type === "DIRECT"
         ? peer?.user?.avatarUrl || ""
         : conversation.avatarUrl || "",
-    color: "from-violet-500 to-indigo-500",
-    members: activeMembers.map(
-      (member) => member.user?._id?.toString?.() || member.userId,
-    ),
+    members: activeMembers.map((member) => memberUserId(member)),
     membersMeta: activeMembers.map(buildMemberMeta),
     status: activeMembers.some((member) => member.user?.isOnline)
       ? "online"
       : "offline",
     unreadCount: 0,
     lastMessage: null,
+    lastMessageAt: conversation.lastMessageAt || null,
     createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
   };
+};
+
+const toPayload = (conversation, userId) => {
+  assertMembership(conversation, userId);
+  return buildConversationPayload(conversation, userId);
 };
 
 export const conversationService = {
@@ -65,61 +67,32 @@ export const conversationService = {
     );
   },
 
-  async getById(id) {
+  async getByIdForUser(id, userId) {
     const conversation = await conversationRepository.findById(id);
-    if (!conversation) return null;
-    return buildConversationPayload(conversation, null);
+    return toPayload(conversation, userId);
   },
 
   async createDirect(userId, otherUserId) {
+    if (userId === otherUserId) {
+      throw new ValidationError("You cannot start a conversation with yourself.");
+    }
+
+    const friends = await friendshipRepository.areFriends(userId, otherUserId);
+    if (!friends) {
+      throw new ForbiddenError(
+        "You can only start a direct conversation with accepted friends.",
+      );
+    }
+
     const directKey = [userId, otherUserId].sort().join(":");
     const existing = await conversationRepository.findByDirectKey(directKey);
-    if (existing) return existing;
+    if (existing) return toPayload(existing, userId);
 
     const created = await conversationRepository.createDirect({
       userId,
       otherUserId,
       directKey,
     });
-    return created;
-  },
-
-  async createGroup(userId, { name, description, memberIds = [] }) {
-    const uniqueIds = Array.from(new Set([userId, ...memberIds]));
-    return conversationRepository.createGroup({
-      userId,
-      name: name.trim(),
-      description: description?.trim() || "",
-      memberIds: uniqueIds.filter((id) => id !== userId),
-    });
-  },
-
-  async updateGroup(conversationId, { name, description }) {
-    return conversationRepository.updateById(conversationId, {
-      ...(name ? { name: name.trim() } : {}),
-      ...(description !== undefined ? { description: description.trim() } : {}),
-    });
-  },
-
-  async addGroupMembers(conversationId, memberIds) {
-    return conversationRepository.addMembers(conversationId, memberIds);
-  },
-
-  async removeGroupMember(conversationId, memberId) {
-    return conversationRepository.removeMember(conversationId, memberId);
-  },
-
-  async directPeerUser(conversation, currentUserId, users = []) {
-    if (!conversation) return null;
-    const members = conversation.membersMeta || conversation.members || [];
-    const peerMember = members.find((member) => {
-      const memberId =
-        member.userId ?? member.id ?? member.user?._id?.toString?.();
-      return memberId && memberId !== currentUserId;
-    });
-    if (!peerMember) return null;
-    const peerId =
-      peerMember.userId ?? peerMember.id ?? peerMember.user?._id?.toString?.();
-    return users.find((user) => user.id === peerId) || null;
+    return toPayload(created, userId);
   },
 };

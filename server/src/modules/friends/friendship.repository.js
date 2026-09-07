@@ -1,8 +1,5 @@
 import { FriendshipModel } from "./friendship.model.js";
 
-const toId = (doc) =>
-  doc?._id?.toString?.() ?? doc?.id?.toString?.() ?? doc?.toString?.();
-
 export const friendshipRepository = {
   async findBetween(userId1, userId2) {
     return FriendshipModel.findOne({

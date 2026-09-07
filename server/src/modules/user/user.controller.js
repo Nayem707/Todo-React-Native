@@ -1,46 +1,38 @@
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { userService } from "./user.service.js";
+import { ok } from "../../utils/httpResponse.js";
+import { ValidationError } from "../../errors/AppError.js";
 
 export const userController = {
   search: asyncHandler(async (req, res) => {
-    const users = await userService.search(req.user.id, req.query.q || "");
-    res.json({ success: true, data: users });
+    ok(res, await userService.search(req.user.id, req.query.q || ""));
   }),
 
   me: asyncHandler(async (req, res) => {
-    const user = await userService.getCurrentProfile(req.user);
-    res.json({ success: true, data: user });
+    ok(res, await userService.getCurrentProfile(req.user));
   }),
 
   updateMe: asyncHandler(async (req, res) => {
-    const user = await userService.updateCurrentProfile(
-      req.user.id,
-      req.body || {},
-    );
-    res.json({ success: true, data: user });
+    ok(res, await userService.updateCurrentProfile(req.user.id, req.body));
   }),
 
   uploadAvatar: asyncHandler(async (req, res) => {
-    if (!req.file) {
-      const err = new Error("No file uploaded.");
-      err.status = 400;
-      throw err;
-    }
-    const user = await userService.updateCurrentProfile(req.user.id, {
-      avatarUrl: `/uploads/${req.file.filename}`,
-    });
-    res.json({ success: true, data: user });
+    if (!req.file) throw new ValidationError("No file uploaded.");
+    ok(
+      res,
+      await userService.updateCurrentProfile(req.user.id, {
+        avatarUrl: `/uploads/${req.file.filename}`,
+      }),
+    );
   }),
 
   uploadCover: asyncHandler(async (req, res) => {
-    if (!req.file) {
-      const err = new Error("No file uploaded.");
-      err.status = 400;
-      throw err;
-    }
-    const user = await userService.updateCurrentProfile(req.user.id, {
-      coverUrl: `/uploads/${req.file.filename}`,
-    });
-    res.json({ success: true, data: user });
+    if (!req.file) throw new ValidationError("No file uploaded.");
+    ok(
+      res,
+      await userService.updateCurrentProfile(req.user.id, {
+        coverUrl: `/uploads/${req.file.filename}`,
+      }),
+    );
   }),
 };

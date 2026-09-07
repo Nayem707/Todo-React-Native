@@ -10,9 +10,9 @@
 
 ## Authentication
 
-Sockets read the same HTTP-only auth cookie as the REST API. On connect, the
-server verifies the access token; failure → immediate disconnect with
-`auth_error`.
+Sockets authenticate from `handshake.auth.token` (or an `Authorization` header).
+The server verifies the access JWT and rejects revoked JTIs; failure →
+immediate disconnect with `auth_error`.
 
 ## Planned events
 

@@ -1,67 +1,70 @@
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { messageService } from "./message.service.js";
+import { created, ok } from "../../utils/httpResponse.js";
+import { ValidationError } from "../../errors/AppError.js";
+
+const emitToConversation = (req, event, payload) => {
+  const io = req.app.get("io");
+  io?.to(`conversation:${req.params.id}`).emit(event, payload);
+};
 
 export const messageController = {
   list: asyncHandler(async (req, res) => {
-    const { page = 1, limit = 20 } = req.query;
-    const payload = await messageService.list(
-      req.params.id,
-      page,
-      limit,
-      req.user.id,
+    const { page, limit } = req.query;
+    ok(
+      res,
+      await messageService.list(req.params.id, page, limit, req.user.id),
     );
-    res.json({ success: true, data: payload });
   }),
 
   create: asyncHandler(async (req, res) => {
-    const { content } = req.body || {};
     const payload = await messageService.create({
       conversationId: req.params.id,
       senderId: req.user.id,
-      content,
+      content: req.body.content,
     });
-    const io = req.app.get("io");
-    io?.to(`conversation:${req.params.id}`).emit("new_message", {
-      message: payload,
-    });
-    res.status(201).json({ success: true, data: payload });
+    emitToConversation(req, "new_message", { message: payload });
+    created(res, payload);
   }),
 
   createWithAttachment: asyncHandler(async (req, res) => {
     if (!req.file) {
-      const err = new Error("No file uploaded.");
-      err.status = 400;
-      throw err;
+      throw new ValidationError("No file uploaded.");
     }
-    const content = req.body?.content || "";
     const payload = await messageService.create({
       conversationId: req.params.id,
       senderId: req.user.id,
-      content,
+      content: req.body?.content || "",
       attachmentUrl: `/uploads/${req.file.filename}`,
       attachmentName: req.file.originalname,
       attachmentSize: req.file.size,
       attachmentMime: req.file.mimetype,
     });
-    const io = req.app.get("io");
-    io?.to(`conversation:${req.params.id}`).emit("new_message", {
-      message: payload,
-    });
-    res.status(201).json({ success: true, data: payload });
+    emitToConversation(req, "new_message", { message: payload });
+    created(res, payload);
   }),
 
   update: asyncHandler(async (req, res) => {
-    const { content } = req.body || {};
     const payload = await messageService.update(
+      req.params.id,
       req.params.messageId,
       req.user.id,
-      content,
+      req.body.content,
     );
-    res.json({ success: true, data: payload });
+    emitToConversation(req, "message_edited", { message: payload });
+    ok(res, payload);
   }),
 
   remove: asyncHandler(async (req, res) => {
-    await messageService.delete(req.params.messageId, req.user.id);
-    res.json({ success: true, data: { message: "Message deleted." } });
+    const payload = await messageService.delete(
+      req.params.id,
+      req.params.messageId,
+      req.user.id,
+    );
+    emitToConversation(req, "message_deleted", {
+      messageId: payload.id,
+      conversationId: req.params.id,
+    });
+    ok(res, { message: "Message deleted." });
   }),
 };

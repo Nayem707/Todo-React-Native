@@ -5,10 +5,9 @@ import {
   ConflictError,
   NotFoundError,
   ForbiddenError,
+  ValidationError,
 } from "../../errors/AppError.js";
-
-const toId = (doc) =>
-  doc?._id?.toString?.() ?? doc?.id?.toString?.() ?? doc?.toString?.();
+import { toId } from "../../utils/ids.js";
 
 const normalizeFriendship = (friendship, currentUserId) => {
   if (!friendship) return null;
@@ -27,9 +26,7 @@ const normalizeFriendship = (friendship, currentUserId) => {
 export const friendshipService = {
   async sendRequest(requesterId, recipientId) {
     if (requesterId === recipientId) {
-      const err = new Error("You cannot send a friend request to yourself.");
-      err.status = 400;
-      throw err;
+      throw new ValidationError("You cannot send a friend request to yourself.");
     }
 
     const recipient = await userRepository.findById(recipientId);
@@ -68,9 +65,7 @@ export const friendshipService = {
       throw new ForbiddenError("You cannot accept this request.");
 
     if (friendship.status !== "PENDING") {
-      const err = new Error("Only pending requests can be accepted.");
-      err.status = 400;
-      throw err;
+      throw new ValidationError("Only pending requests can be accepted.");
     }
 
     const updated = await friendshipRepository.updateStatus(
@@ -88,9 +83,7 @@ export const friendshipService = {
       throw new ForbiddenError("You cannot reject this request.");
 
     if (friendship.status !== "PENDING") {
-      const err = new Error("Only pending requests can be rejected.");
-      err.status = 400;
-      throw err;
+      throw new ValidationError("Only pending requests can be rejected.");
     }
 
     const updated = await friendshipRepository.updateStatus(
@@ -108,9 +101,7 @@ export const friendshipService = {
       throw new ForbiddenError("You cannot cancel this request.");
 
     if (friendship.status !== "PENDING") {
-      const err = new Error("Only pending requests can be cancelled.");
-      err.status = 400;
-      throw err;
+      throw new ValidationError("Only pending requests can be cancelled.");
     }
 
     const updated = await friendshipRepository.updateStatus(

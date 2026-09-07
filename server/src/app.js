@@ -13,6 +13,8 @@ import { apiRouter } from "./routes/index.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
 import { globalLimiter } from "./middlewares/rateLimit.middleware.js";
+import { authenticate } from "./middlewares/auth.middleware.js";
+import { requireTrustedOrigin } from "./middlewares/origin.middleware.js";
 
 export const createApp = async () => {
   if (mongoose.connection.readyState === 0) {
@@ -22,7 +24,7 @@ export const createApp = async () => {
   const app = express();
 
   app.disable("x-powered-by");
-  app.set("trust proxy", 1); // required for correct client IP behind reverse proxies
+  app.set("trust proxy", 1);
 
   app.use(helmet());
   const allowedOrigins = env.CLIENT_URL.split(",").map((o) => o.trim());
@@ -37,6 +39,7 @@ export const createApp = async () => {
   app.use(express.json({ limit: "1mb" }));
   app.use(express.urlencoded({ extended: true, limit: "1mb" }));
   app.use(cookieParser(env.COOKIE_SECRET));
+  app.use(requireTrustedOrigin);
 
   if (isDev) {
     app.use(morgan(":method :status :url :response-time ms"));
@@ -52,7 +55,6 @@ export const createApp = async () => {
           if (res.statusCode >= 400) return "warn";
           return "info";
         },
-        // Custom serializers to log only essential request/response data
         serializers: {
           req: (req) => ({
             method: req.method,
@@ -62,7 +64,6 @@ export const createApp = async () => {
             statusCode: res.statusCode,
           }),
         },
-        // Custom message format for clean, compact output
         msgCaseSensitivity: "lower",
       }),
     );
@@ -72,7 +73,7 @@ export const createApp = async () => {
 
   app.use("/api", apiRouter);
 
-  app.use("/uploads", express.static(env.STORAGE_LOCAL_DIR));
+  app.use("/uploads", authenticate, express.static(env.STORAGE_LOCAL_DIR));
 
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);

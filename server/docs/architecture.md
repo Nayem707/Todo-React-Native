@@ -30,12 +30,12 @@ decisions, and the boundaries every module must respect.
                                                        │
                                                        ▼
                                             ┌────────────────────┐
-                                            │  Prisma (single    │
+                                            │  Mongoose (single  │
                                             │  process instance) │
                                             └──────────┬─────────┘
                                                        ▼
                                             ┌────────────────────┐
-                                            │  MongoDB (rs0)     │
+                                            │  MongoDB           │
                                             └────────────────────┘
 ```
 
@@ -47,16 +47,16 @@ behave identically for both transports.
 ## 3. Backend layers
 
 ```
-Route  ──►  Controller  ──►  Service  ──►  Repository  ──►  Prisma  ──►  MongoDB
+Route  ──►  Controller  ──►  Service  ──►  Repository  ──►  Mongoose  ──►  MongoDB
 ```
 
 **Hard rules**
 
-- Controllers never touch Prisma directly.
+- Controllers never touch Mongoose directly.
 - Business logic never lives in routes or React components.
-- Socket handlers never bypass the service layer.
-- Repositories are the _only_ callers of Prisma methods.
-- Prisma client is instantiated **exactly once** per process
+- Socket join/typing check membership; they do not write messages.
+- Repositories are the _only_ callers of Mongoose models.
+- The Mongo connection is created **exactly once** per process
   (`src/config/database.js`).
 
 **Cross-cutting concerns**
@@ -72,7 +72,7 @@ Route  ──►  Controller  ──►  Service  ──►  Repository  ──�
 ## 4. Real-time layer
 
 ```
-Socket Event  ──►  Socket Handler  ──►  Service  ──►  Repository  ──►  Prisma
+Socket Event  ──►  Socket Handler  ──►  membership check  ──►  rooms
 ```
 
 - **Auth**: sockets authenticate from the same HTTP-only cookie used by the REST

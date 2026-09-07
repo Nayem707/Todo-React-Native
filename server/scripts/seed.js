@@ -25,8 +25,13 @@ const USERS = [
 const DEFAULT_PASSWORD = "Demo1234!";
 
 async function seed() {
+  if (env.NODE_ENV === "production") {
+    console.error("Refusing to seed the production database.");
+    process.exit(1);
+  }
+
   await mongoose.connect(env.DATABASE_URL, { autoIndex: true });
-  console.log("✔  Connected to MongoDB");
+  console.warn("Connected to MongoDB");
 
   // Wipe everything
   await Promise.all([
@@ -35,7 +40,7 @@ async function seed() {
     MessageModel.deleteMany({}),
     FriendshipModel.deleteMany({}),
   ]);
-  console.log("✔  All collections cleared");
+  console.warn("All collections cleared");
 
   const passwordHash = await argon2.hash(DEFAULT_PASSWORD);
 
@@ -49,13 +54,13 @@ async function seed() {
     })),
   );
 
-  console.log("\n✔  Dummy users created (password: Demo1234!):\n");
+  console.warn("Dummy users created (password: Demo1234!):");
   users.forEach((u) =>
-    console.log(`   ${u.displayName.padEnd(16)}  ${u.email}`),
+    console.warn(`  ${u.displayName.padEnd(16)}  ${u.email}`),
   );
 
   await mongoose.disconnect();
-  console.log("\n✔  Done. Database is ready.");
+  console.warn("Done. Database is ready.");
 }
 
 seed().catch((err) => {

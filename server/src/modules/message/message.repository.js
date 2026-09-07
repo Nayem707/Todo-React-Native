@@ -8,14 +8,9 @@ export const messageRepository = {
     });
   },
 
-  async listByConversation({
-    conversationId,
-    page = 1,
-    limit = 20,
-    currentUserId,
-  }) {
+  async listByConversation({ conversationId, page = 1, limit = 20 }) {
     const skip = (Number(page) - 1) * Number(limit);
-    const messages = await MessageModel.find({
+    return MessageModel.find({
       conversation: conversationId,
       deletedAt: null,
     })
@@ -25,27 +20,6 @@ export const messageRepository = {
       .skip(skip)
       .limit(Number(limit))
       .lean();
-
-    if (currentUserId) {
-      const unreadMessageIds = messages
-        .filter(
-          (message) =>
-            message.sender?.toString?.() !== currentUserId &&
-            !message.reads?.some(
-              (read) => read.user?._id?.toString?.() === currentUserId,
-            ),
-        )
-        .map((message) => message._id);
-
-      if (unreadMessageIds.length) {
-        await MessageModel.updateMany(
-          { _id: { $in: unreadMessageIds } },
-          { $addToSet: { reads: { user: currentUserId, readAt: new Date() } } },
-        );
-      }
-    }
-
-    return messages;
   },
 
   async create({

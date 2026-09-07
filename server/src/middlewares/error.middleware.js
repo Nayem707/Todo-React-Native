@@ -38,7 +38,6 @@ const mapMongoError = (err) => {
 };
 
 // Express requires 4 params to recognize error middleware.
-// eslint-disable-next-line no-unused-vars
 export const errorMiddleware = (err, req, res, _next) => {
   const mapped = mapMongoError(err) ?? (err instanceof AppError ? err : null);
   const originalStatus = Number.isInteger(err?.status) ? err.status : null;

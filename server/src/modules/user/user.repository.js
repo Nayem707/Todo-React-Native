@@ -1,4 +1,5 @@
 import { UserModel } from "./user.model.js";
+import { escapeRegex } from "../../utils/ids.js";
 
 const withId = (user) => {
   if (!user) return user;
@@ -13,6 +14,13 @@ export const userRepository = {
   async findByEmail(email) {
     const user = await UserModel.findOne({
       email: String(email).trim().toLowerCase(),
+    }).lean();
+    return withId(user);
+  },
+
+  async findByUsername(username) {
+    const user = await UserModel.findOne({
+      username: String(username).trim().toLowerCase(),
     }).lean();
     return withId(user);
   },
@@ -37,18 +45,18 @@ export const userRepository = {
 
   async searchUsers(currentUserId, query = "") {
     const q = String(query).trim();
+    if (q.length < 2) return [];
+
+    const safe = escapeRegex(q);
     const users = await UserModel.find({
       _id: { $ne: currentUserId },
-      ...(q
-        ? {
-            $or: [
-              { displayName: { $regex: q, $options: "i" } },
-              { email: { $regex: q, $options: "i" } },
-            ],
-          }
-        : {}),
+      $or: [
+        { displayName: { $regex: safe, $options: "i" } },
+        { username: { $regex: safe, $options: "i" } },
+      ],
     })
       .sort({ displayName: 1 })
+      .limit(20)
       .lean();
 
     return users.map(withId);

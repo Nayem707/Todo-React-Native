@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import { Router } from "express";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { ok } from "../../utils/httpResponse.js";
+import { AppError } from "../../errors/AppError.js";
+import { ERROR_CODES } from "../../constants/index.js";
 
 export const healthRouter = Router();
 
@@ -15,9 +17,10 @@ healthRouter.get(
   asyncHandler(async (_req, res) => {
     const dbState = mongoose.connection.readyState;
     if (dbState !== 1) {
-      const error = new Error("Database not ready.");
-      error.status = 503;
-      throw error;
+      throw new AppError("Database not ready.", {
+        status: 503,
+        code: ERROR_CODES.INTERNAL,
+      });
     }
     ok(res, { status: "ready", db: "ok" });
   }),
