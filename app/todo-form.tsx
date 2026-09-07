@@ -88,9 +88,9 @@ export default function TodoFormScreen() {
   });
 
   return (
-    <View className="flex-1 bg-slate-950 px-4 pt-16">
+    <View className="flex-1 bg-slate-950 px-2 pt-8">
       <View className="absolute inset-x-0 top-0 h-48 bg-sky-500/20" />
-      <View className="mb-5 flex-row items-center justify-between">
+      <View className="mb-4 flex-row items-center justify-between">
         <Pressable
           onPress={() => router.back()}
           className="flex-row items-center gap-2 rounded-full bg-white/10 px-4 py-3"
@@ -105,10 +105,10 @@ export default function TodoFormScreen() {
       </View>
 
       <View className="flex-1 rounded-[32px] bg-slate-100 px-4 py-5">
-        <Text className="text-3xl font-black text-slate-900">
+        <Text className="text-xl font-black text-slate-900">
           {existingTodo ? "Update task" : "Create task"}
         </Text>
-        <Text className="mt-2 text-base leading-6 text-slate-500">
+        <Text className="mt-2 text-xs leading-6 text-slate-500">
           Keep the details clear so the todo stays useful later.
         </Text>
 

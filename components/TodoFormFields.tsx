@@ -30,7 +30,7 @@ export function TodoFormFields({ control, errors, mode }: TodoFormFieldsProps) {
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
-      contentContainerClassName="gap-4 pb-10"
+      contentContainerClassName="gap-4 pb-4"
     >
       <Controller
         control={control}
@@ -41,7 +41,7 @@ export function TodoFormFields({ control, errors, mode }: TodoFormFieldsProps) {
               Title
             </Text>
             <TextInput
-              className="rounded-3xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-900"
+              className="rounded-3xl border border-slate-200 bg-white px-4 py-2 text-base text-slate-900"
               placeholder="Prepare product demo"
               placeholderTextColor="#94a3b8"
               onBlur={onBlur}
@@ -66,7 +66,7 @@ export function TodoFormFields({ control, errors, mode }: TodoFormFieldsProps) {
               Description
             </Text>
             <TextInput
-              className="min-h-[120px] rounded-3xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-900"
+              className="min-h-[160px] rounded-3xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-900"
               placeholder="Add a quick note, context, or checklist"
               placeholderTextColor="#94a3b8"
               multiline
@@ -97,10 +97,10 @@ export function TodoFormFields({ control, errors, mode }: TodoFormFieldsProps) {
                 <Pressable
                   key={priority}
                   onPress={() => onChange(priority)}
-                  className={`flex-1 rounded-3xl border px-4 py-3 ${value === priority ? "border-sky-500 bg-sky-50" : "border-slate-200 bg-white"}`}
+                  className={`flex-1 rounded-full border-2 ${value === priority ? "border-sky-500 bg-sky-50" : "border-slate-100 bg-white"}`}
                 >
                   <Text
-                    className={`text-center text-sm font-semibold capitalize ${getPriorityTone(priority)}`}
+                    className={`text-center rounded-full border border-slate-100 py-1 text-sm font-semibold capitalize ${getPriorityTone(priority)}`}
                   >
                     {priority}
                   </Text>
@@ -121,7 +121,7 @@ export function TodoFormFields({ control, errors, mode }: TodoFormFieldsProps) {
                 Due date
               </Text>
               <TextInput
-                className="rounded-3xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-900"
+                className="rounded-3xl border border-slate-200 bg-white px-4 py-2 text-base text-slate-900"
                 placeholder="YYYY-MM-DD"
                 placeholderTextColor="#94a3b8"
                 onBlur={onBlur}
@@ -146,7 +146,7 @@ export function TodoFormFields({ control, errors, mode }: TodoFormFieldsProps) {
                 Category
               </Text>
               <TextInput
-                className="rounded-3xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-900"
+                className="rounded-3xl border border-slate-200 bg-white px-4 py-2 text-base text-slate-900"
                 placeholder="Work"
                 placeholderTextColor="#94a3b8"
                 onBlur={onBlur}
@@ -162,7 +162,7 @@ export function TodoFormFields({ control, errors, mode }: TodoFormFieldsProps) {
         <Text className="mb-2 text-sm font-semibold text-slate-700">
           Quick categories
         </Text>
-        <View className="flex-row flex-wrap gap-2">
+        <View className="flex-row flex-wrap gap-1">
           <Controller
             control={control}
             name="category"
@@ -172,10 +172,10 @@ export function TodoFormFields({ control, errors, mode }: TodoFormFieldsProps) {
                   <Pressable
                     key={category}
                     onPress={() => onChange(category)}
-                    className={`rounded-full px-4 py-2 ${value === category ? "bg-sky-500" : "bg-slate-100"}`}
+                    className={`rounded-full border border-slate-200 px-2 py-1 ${value === category ? "bg-sky-500" : "bg-slate-100"}`}
                   >
                     <Text
-                      className={`text-sm font-semibold ${value === category ? "text-white" : "text-slate-700"}`}
+                      className={`text-xs font-semibold ${value === category ? "text-white" : "text-slate-700"}`}
                     >
                       {category}
                     </Text>

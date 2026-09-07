@@ -93,7 +93,7 @@ export default function HomeScreen() {
           <Text className="text-sm font-semibold uppercase tracking-[4px] text-sky-300">
             Todo Vault
           </Text>
-          <Text className="mt-2 text-3xl font-black text-white">
+          <Text className="mt-2 text-xl font-black text-white">
             Keep the day under control.
           </Text>
           <Text className="mt-3 max-w-[85%] text-base leading-6 text-slate-300">
@@ -180,7 +180,7 @@ export default function HomeScreen() {
 
         <View className="mt-6">
           <View className="mb-3 flex-row items-center justify-between">
-            <Text className="text-xl font-black text-white">Your tasks</Text>
+            <Text className="text-xl font-black text-black">Your tasks</Text>
             <Text className="text-sm font-semibold text-slate-300">
               {visibleTodos.length} shown
             </Text>
@@ -217,10 +217,10 @@ export default function HomeScreen() {
 
       <Pressable
         onPress={() => router.push("/todo-form")}
-        className="absolute bottom-8 right-5 flex-row items-center gap-3 rounded-full bg-sky-500 px-5 py-4 shadow-glow"
+        className="absolute bottom-8 right-5 flex-row items-center rounded-full bg-sky-500 px-3 py-2 shadow-glow"
       >
         <PlusIcon color="#fff" size={20} />
-        <Text className="text-base font-bold text-white">Add Todo</Text>
+        <Text className="text-sm font-semibold text-white">Add Todo</Text>
       </Pressable>
     </View>
   );
