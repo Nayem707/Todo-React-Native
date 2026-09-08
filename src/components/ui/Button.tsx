@@ -7,9 +7,12 @@ import { Text } from "./Text";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";
 
+type ButtonSize = "sm" | "md";
+
 type ButtonProps = Omit<PressableProps, "children"> & {
   label: string;
   variant?: ButtonVariant;
+  size?: ButtonSize;
   icon?: LucideIcon;
 };
 
@@ -34,17 +37,21 @@ const iconColor: Record<ButtonVariant, string> = {
 export function Button({
   label,
   variant = "primary",
+  size = "md",
   icon: Icon,
   disabled,
   className,
   ...props
 }: ButtonProps) {
+  const isSmall = size === "sm";
+
   return (
     <Pressable
       accessibilityRole="button"
       disabled={disabled}
       className={cn(
-        "flex-row items-center justify-center gap-2 rounded-2xl px-4 py-3",
+        "flex-row items-center justify-center gap-2 rounded-2xl",
+        isSmall ? "px-3 py-2" : "px-4 py-3",
         containerClass[variant],
         disabled && "opacity-50",
         className,
@@ -54,11 +61,17 @@ export function Button({
       {Icon ? (
         <Icon
           color={iconColor[variant]}
-          size={icons.size.sm}
+          size={isSmall ? 16 : icons.size.sm}
           strokeWidth={icons.stroke}
         />
       ) : null}
-      <Text className={cn("text-base font-semibold", labelClass[variant])}>
+      <Text
+        className={cn(
+          "font-semibold",
+          isSmall ? "text-sm" : "text-base",
+          labelClass[variant],
+        )}
+      >
         {label}
       </Text>
     </Pressable>

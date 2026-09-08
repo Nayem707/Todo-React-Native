@@ -1,27 +1,24 @@
 import { View } from "react-native";
 import { Redirect, Stack, useRouter } from "expo-router";
-import { MoreVertical, Plus, Search, User } from "lucide-react-native";
+import { MoreVertical, User, UserPlus } from "lucide-react-native";
 
 import { HeaderBackButton } from "../../src/components/common";
 import { IconButton } from "../../src/components/ui";
 import { SessionLoader } from "../../src/features/auth/SessionLoader";
 import { useAuth } from "../../src/features/auth/useAuth";
+import { openFindPeople } from "../../src/features/users/usersSlice";
+import { useAppDispatch } from "../../src/store/hooks";
 
 function ChatsHeaderActions() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   return (
     <View className="flex-row items-center">
-      <IconButton icon={Search} accessibilityLabel="Search chats" disabled />
       <IconButton
-        icon={Plus}
-        accessibilityLabel="New chat"
-        onPress={() =>
-          router.push({
-            pathname: "/chat/[id]",
-            params: { id: "new" },
-          })
-        }
+        icon={UserPlus}
+        accessibilityLabel="Find people"
+        onPress={() => dispatch(openFindPeople())}
       />
       <IconButton
         icon={User}
