@@ -1,10 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
 
-import todosReducer from "./todosSlice";
+import chatReducer from "../features/chat/chatSlice";
 
 export const store = configureStore({
   reducer: {
-    todos: todosReducer,
+    chat: chatReducer,
   },
 });
 
