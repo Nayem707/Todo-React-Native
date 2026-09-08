@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
@@ -7,7 +7,6 @@ import { Provider } from "react-redux";
 
 import "../global.css";
 
-import { BrandSplash } from "../src/components/common";
 import { restoreSession } from "../src/store/slices";
 import { useAppDispatch } from "../src/store/hooks";
 import { store } from "../src/store";
@@ -23,11 +22,6 @@ function SessionBootstrap() {
 }
 
 export default function RootLayout() {
-  const [isSplashDone, setIsSplashDone] = useState(false);
-  const handleSplashFinish = useCallback(() => {
-    setIsSplashDone(true);
-  }, []);
-
   return (
     <Provider store={store}>
       <SafeAreaProvider>
@@ -46,7 +40,6 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="(main)" options={{ headerShown: false }} />
           </Stack>
-          {!isSplashDone ? <BrandSplash onFinish={handleSplashFinish} /> : null}
         </GestureHandlerRootView>
       </SafeAreaProvider>
     </Provider>
