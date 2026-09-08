@@ -1,37 +1,34 @@
 {
-  "cli": {
-    "version": ">= 22.6.0",
-    "appVersionSource": "remote"
-  },
-  "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
+  "expo": {
+    "name": "Chat",
+    "slug": "chat",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "chat",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nayem490.mobileapp"
     },
-    "preview": {
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
+    "android": {
+      "package": "com.nayem490.mobileapp",
+      "icon": "./assets/icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0EA5E9"
       }
     },
-    "production": {
-      "autoIncrement": true
-    }
-  },
-  "submit": {
-    "production": {}
-  },
-  "extra": {
-    "eas": {
-      "projectId": "bf482167-f417-46e5-b8f1-d45ea876fd27"
-    }
-  },
-  "expo": {
-    "android": {
-      "package": "com.nayem490.mobileapp"
-    },
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "bf482167-f417-46e5-b8f1-d45ea876fd27"
+      }
     }
   }
 }
