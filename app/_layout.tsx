@@ -8,6 +8,7 @@ import { Provider } from "react-redux";
 import "../global.css";
 
 import { restoreSession } from "../src/store/slices";
+import { SocketBridge } from "../src/features/chat/SocketBridge";
 import { useAppDispatch } from "../src/store/hooks";
 import { store } from "../src/store";
 
@@ -28,6 +29,7 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <StatusBar style="dark" />
           <SessionBootstrap />
+          <SocketBridge />
           <Stack
             screenOptions={{
               headerShadowVisible: false,

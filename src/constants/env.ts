@@ -9,3 +9,13 @@ export function getApiBaseUrl(): string {
 
   return value.replace(/\/$/, "");
 }
+
+export function getSocketUrl(): string {
+  const explicit = process.env.EXPO_PUBLIC_SOCKET_URL?.trim();
+
+  if (explicit) {
+    return explicit.replace(/\/$/, "");
+  }
+
+  return getApiBaseUrl().replace(/\/api$/i, "");
+}

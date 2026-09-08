@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { FlatList, View } from "react-native";
-import { useRouter } from "expo-router";
 import { CircleAlert, Search, Users, X } from "lucide-react-native";
 
 import {
@@ -39,10 +38,11 @@ import {
   sendFriendRequest,
 } from "../usersSlice";
 import { MIN_USER_SEARCH_LENGTH } from "../usersTypes";
+import { useOpenConversation } from "../../chat/useOpenConversation";
 import { PersonRow } from "./PersonRow";
 
 export function FindPeopleModal() {
-  const router = useRouter();
+  const openConversation = useOpenConversation();
   const dispatch = useAppDispatch();
   const [query, setQuery] = useState("");
   const visible = useAppSelector(selectIsFindPeopleOpen);
@@ -210,10 +210,10 @@ export function FindPeopleModal() {
                 )
               }
               onMessage={() => {
-                handleClose();
-                router.push({
-                  pathname: "/chat/[id]",
-                  params: { id: item.id },
+                void openConversation(item.id).then((opened) => {
+                  if (opened) {
+                    handleClose();
+                  }
                 });
               }}
             />
