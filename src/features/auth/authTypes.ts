@@ -2,6 +2,12 @@ export type AuthUser = {
   id: string;
   name: string;
   email: string;
+  username?: string;
+  bio?: string;
+  avatar?: string;
+  coverUrl?: string;
+  status?: string;
+  createdAt?: string;
 };
 
 export type LoginCredentials = {
@@ -17,4 +23,11 @@ export type RegisterPayload = {
 
 export type AuthSession = {
   user: AuthUser;
+  accessToken: string;
+  refreshToken: string;
+};
+
+export type AuthApiErrorDetail = {
+  path: string;
+  message: string;
 };

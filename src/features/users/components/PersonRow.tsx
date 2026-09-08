@@ -6,6 +6,7 @@ import { FriendRequestActions } from "./FriendRequestActions";
 
 type PersonRowProps = {
   person: Person;
+  busy?: boolean;
   onAdd: () => void;
   onCancel: () => void;
   onConfirm: () => void;
@@ -15,12 +16,17 @@ type PersonRowProps = {
 
 export function PersonRow({
   person,
+  busy = false,
   onAdd,
   onCancel,
   onConfirm,
   onDecline,
   onMessage,
 }: PersonRowProps) {
+  const subtitle = person.username
+    ? `@${person.username}`
+    : person.email;
+
   return (
     <View className="flex-row gap-3 py-3">
       <Avatar
@@ -34,9 +40,11 @@ export function PersonRow({
         <Text variant="subtitle" numberOfLines={1}>
           {person.name}
         </Text>
-        <Text variant="caption" numberOfLines={1}>
-          @{person.username}
-        </Text>
+        {subtitle ? (
+          <Text variant="caption" numberOfLines={1}>
+            {subtitle}
+          </Text>
+        ) : null}
         <Text
           variant="caption"
           className={person.isOnline ? "text-success" : "text-slate-400"}
@@ -46,6 +54,7 @@ export function PersonRow({
         <View className="mt-2">
           <FriendRequestActions
             status={person.status}
+            busy={busy}
             onAdd={onAdd}
             onCancel={onCancel}
             onConfirm={onConfirm}

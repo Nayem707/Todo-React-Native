@@ -1,7 +1,18 @@
+import type { AuthApiErrorDetail } from "../../features/auth/authTypes";
+
 export class AuthError extends Error {
-  constructor(message: string) {
+  code?: string;
+  details?: AuthApiErrorDetail[];
+
+  constructor(
+    message: string,
+    code?: string,
+    details?: AuthApiErrorDetail[],
+  ) {
     super(message);
     this.name = "AuthError";
+    this.code = code;
+    this.details = details;
   }
 }
 
@@ -10,6 +21,10 @@ export function toAuthErrorMessage(
   fallback: string,
 ): string {
   if (error instanceof AuthError) {
+    if (error.details?.length) {
+      return error.details.map((detail) => detail.message).join(" ");
+    }
+
     return error.message;
   }
 

@@ -6,7 +6,6 @@ import { CircleAlert, Eye, EyeOff, Lock, LogIn, Mail } from "lucide-react-native
 import { KeyboardAvoidingWrapper, Screen } from "../../../components/common";
 import { Button, Card, IconButton, Input, Text } from "../../../components/ui";
 import { colors } from "../../../constants/theme";
-import { authService } from "../../../services/auth";
 import { login } from "../../../store/slices";
 import { useAppDispatch } from "../../../store/hooks";
 
@@ -18,7 +17,6 @@ export function LoginScreen() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const demoHint = authService.getDemoHint();
 
   const handleLogin = async () => {
     setError(null);
@@ -43,7 +41,7 @@ export function LoginScreen() {
           <Card className="gap-4 p-6">
             <Text variant="title">Sign in</Text>
             <Text variant="muted">
-              Use the demo account for now. API sign-in will replace this later.
+              Sign in with the email and password for your account.
             </Text>
             <Input
               label="Email"
@@ -84,11 +82,6 @@ export function LoginScreen() {
                   {error}
                 </Text>
               </View>
-            ) : null}
-            {demoHint ? (
-              <Text variant="caption" className="text-slate-500">
-                {demoHint}
-              </Text>
             ) : null}
             <Button
               icon={LogIn}

@@ -15,10 +15,15 @@ export function ProfileScreen() {
   return (
     <Screen className="px-6 py-8">
       <Card className="items-center p-6">
-        <Avatar name={user?.name} size={72} />
+        <Avatar name={user?.name} uri={user?.avatar} size={72} />
         <Text variant="title" className="mt-4">
           {user?.name ?? "Guest"}
         </Text>
+        {user?.username ? (
+          <Text variant="caption" className="mt-1">
+            @{user.username}
+          </Text>
+        ) : null}
         <Text variant="muted" className="mt-1 text-center">
           {user?.email ?? "No session"}
         </Text>

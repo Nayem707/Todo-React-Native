@@ -1,14 +1,26 @@
-import { FlatList, Pressable, View } from "react-native";
-import { useRouter } from "expo-router";
-import { ChevronRight, MessageCircle, UserPlus } from "lucide-react-native";
+import { useCallback } from "react";
+import { FlatList, Pressable, RefreshControl, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import { ChevronRight, CircleAlert, MessageCircle, UserPlus } from "lucide-react-native";
 
 import { Screen } from "../../../components/common";
-import { Avatar, Button, EmptyState, Text } from "../../../components/ui";
+import {
+  Avatar,
+  Button,
+  EmptyState,
+  Loader,
+  Text,
+} from "../../../components/ui";
 import { colors } from "../../../constants/theme";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { FindPeopleModal } from "../../users/components/FindPeopleModal";
-import { selectFriends } from "../../users/usersSelectors";
-import { openFindPeople } from "../../users/usersSlice";
+import {
+  selectFriends,
+  selectGraphError,
+  selectGraphStatus,
+  selectIsRefreshing,
+} from "../../users/usersSelectors";
+import { fetchFriendGraph, openFindPeople } from "../../users/usersSlice";
 import type { Person } from "../../users/usersTypes";
 
 function FriendListItem({ person }: { person: Person }) {
@@ -48,29 +60,72 @@ function FriendListItem({ person }: { person: Person }) {
 export function ChatsScreen() {
   const dispatch = useAppDispatch();
   const friends = useAppSelector(selectFriends);
+  const graphStatus = useAppSelector(selectGraphStatus);
+  const graphError = useAppSelector(selectGraphError);
+  const isRefreshing = useAppSelector(selectIsRefreshing);
+  const isInitialLoading = graphStatus === "loading" && friends.length === 0;
+
+  useFocusEffect(
+    useCallback(() => {
+      void dispatch(fetchFriendGraph());
+    }, [dispatch]),
+  );
+
+  const findPeopleButton = (
+    <View className="mt-6">
+      <Button
+        icon={UserPlus}
+        label="Find People"
+        onPress={() => dispatch(openFindPeople())}
+      />
+    </View>
+  );
 
   return (
     <Screen>
-      {friends.length === 0 ? (
+      {isInitialLoading ? (
+        <Loader className="flex-1" size="large" />
+      ) : graphError && friends.length === 0 ? (
+        <View className="flex-1 justify-center px-6 py-8">
+          <EmptyState
+            icon={CircleAlert}
+            title="Couldn't load friends"
+            subtitle={graphError}
+          >
+            <View className="mt-4 w-full">
+              <Button
+                label="Try again"
+                onPress={() => {
+                  void dispatch(fetchFriendGraph());
+                }}
+              />
+            </View>
+          </EmptyState>
+          {findPeopleButton}
+        </View>
+      ) : friends.length === 0 ? (
         <View className="flex-1 justify-center px-6 py-8">
           <EmptyState
             icon={MessageCircle}
             title="No conversations yet"
             subtitle="Add friends to start chatting. New conversations stay empty until you send a message."
           />
-          <View className="mt-6">
-            <Button
-              icon={UserPlus}
-              label="Find People"
-              onPress={() => dispatch(openFindPeople())}
-            />
-          </View>
+          {findPeopleButton}
         </View>
       ) : (
         <FlatList
           data={friends}
           keyExtractor={(item) => item.id}
           contentContainerClassName="px-4 py-4"
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={() => {
+                void dispatch(fetchFriendGraph({ silent: true }));
+              }}
+              tintColor={colors.accent}
+            />
+          }
           renderItem={({ item }) => <FriendListItem person={item} />}
         />
       )}

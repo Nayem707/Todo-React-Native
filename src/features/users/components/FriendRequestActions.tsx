@@ -6,6 +6,7 @@ import type { FriendRequestStatus } from "../usersTypes";
 
 type FriendRequestActionsProps = {
   status: FriendRequestStatus;
+  busy?: boolean;
   onAdd: () => void;
   onCancel: () => void;
   onConfirm: () => void;
@@ -15,6 +16,7 @@ type FriendRequestActionsProps = {
 
 export function FriendRequestActions({
   status,
+  busy = false,
   onAdd,
   onCancel,
   onConfirm,
@@ -24,13 +26,20 @@ export function FriendRequestActions({
   if (status === "friends") {
     return (
       <View className="flex-row flex-wrap items-center gap-2">
-        <Button icon={Check} size="sm" variant="secondary" label="Friends" disabled />
+        <Button
+          icon={Check}
+          size="sm"
+          variant="secondary"
+          label="Friends"
+          disabled
+        />
         {onMessage ? (
           <Button
             icon={MessageCircle}
             size="sm"
             variant="ghost"
             label="Message"
+            disabled={busy}
             onPress={onMessage}
           />
         ) : null}
@@ -41,12 +50,13 @@ export function FriendRequestActions({
   if (status === "request_sent") {
     return (
       <View className="flex-row flex-wrap items-center gap-2">
-        <Button size="sm" variant="secondary" label="Requested" disabled />
+        <Button size="sm" variant="secondary" label="Request Sent" disabled />
         <Button
           icon={X}
           size="sm"
           variant="ghost"
           label="Cancel"
+          disabled={busy}
           onPress={onCancel}
         />
       </View>
@@ -60,6 +70,7 @@ export function FriendRequestActions({
           icon={Check}
           size="sm"
           label="Confirm"
+          disabled={busy}
           onPress={onConfirm}
         />
         <Button
@@ -67,6 +78,7 @@ export function FriendRequestActions({
           size="sm"
           variant="ghost"
           label="Decline"
+          disabled={busy}
           onPress={onDecline}
         />
       </View>
@@ -74,6 +86,12 @@ export function FriendRequestActions({
   }
 
   return (
-    <Button icon={UserPlus} size="sm" label="Add Friend" onPress={onAdd} />
+    <Button
+      icon={UserPlus}
+      size="sm"
+      label="Add Friend"
+      disabled={busy}
+      onPress={onAdd}
+    />
   );
 }

@@ -50,8 +50,8 @@ export function RegisterScreen() {
           <Card className="gap-4 p-6">
             <Text variant="title">Create account</Text>
             <Text variant="muted">
-              This only creates a local session on this device. It is not a
-              server account.
+              Passwords must be at least 8 characters and include a letter and a
+              number.
             </Text>
             <Input
               label="Name"
@@ -78,7 +78,7 @@ export function RegisterScreen() {
               leftIcon={Lock}
               secureTextEntry={!isPasswordVisible}
               autoComplete="new-password"
-              placeholder="At least 6 characters"
+              placeholder="At least 8 characters"
               value={password}
               onChangeText={setPassword}
               editable={!isSubmitting}
@@ -104,7 +104,7 @@ export function RegisterScreen() {
             ) : null}
             <Button
               icon={UserPlus}
-              label={isSubmitting ? "Creating session..." : "Continue"}
+              label={isSubmitting ? "Creating account..." : "Create account"}
               disabled={isSubmitting}
               onPress={() => {
                 void handleRegister();
