@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { FlatList, Pressable, RefreshControl, View } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { ChevronRight, CircleAlert, MessageCircle, UserPlus } from "lucide-react-native";
 
 import { Screen } from "../../../components/common";
@@ -13,8 +13,7 @@ import {
 } from "../../../components/ui";
 import { colors } from "../../../constants/theme";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { FindPeopleModal } from "../../users/components/FindPeopleModal";
-import { fetchFriendGraph, openFindPeople } from "../../users/usersSlice";
+import { fetchFriendGraph } from "../../users/usersSlice";
 import {
   selectConversationListError,
   selectConversationListStatus,
@@ -77,6 +76,7 @@ function ConversationRow({ conversation }: { conversation: Conversation }) {
 
 export function ChatsScreen() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const openConversation = useOpenConversation();
   const conversations = useAppSelector(selectConversations);
   const listStatus = useAppSelector(selectConversationListStatus);
@@ -97,15 +97,18 @@ export function ChatsScreen() {
         <Button
           icon={UserPlus}
           label="Find People"
-          onPress={() => dispatch(openFindPeople())}
+          onPress={() => router.push("/people")}
         />
       </View>
     ),
-    [dispatch],
+    [router],
   );
 
   return (
-    <Screen>
+    <Screen safe>
+      <View className="px-5 pb-2 pt-4">
+        <Text variant="title">Chats</Text>
+      </View>
       {isInitialLoading ? (
         <Loader className="flex-1" size="large" />
       ) : listError && conversations.length === 0 ? (
@@ -161,7 +164,6 @@ export function ChatsScreen() {
           )}
         />
       )}
-      <FindPeopleModal />
     </Screen>
   );
 }

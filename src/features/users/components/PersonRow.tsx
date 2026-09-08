@@ -1,7 +1,7 @@
 import { View } from "react-native";
 
 import { Avatar, Text } from "../../../components/ui";
-import type { Person } from "../usersTypes";
+import type { FriendRequestStatus, Person } from "../usersTypes";
 import { FriendRequestActions } from "./FriendRequestActions";
 
 type PersonRowProps = {
@@ -14,6 +14,22 @@ type PersonRowProps = {
   onMessage?: () => void;
 };
 
+function friendStatusLabel(status: FriendRequestStatus) {
+  if (status === "friends") {
+    return "Friends";
+  }
+
+  if (status === "request_sent") {
+    return "Sent";
+  }
+
+  if (status === "request_received") {
+    return "Incoming";
+  }
+
+  return null;
+}
+
 export function PersonRow({
   person,
   busy = false,
@@ -23,16 +39,14 @@ export function PersonRow({
   onDecline,
   onMessage,
 }: PersonRowProps) {
-  const subtitle = person.username
-    ? `@${person.username}`
-    : person.email;
+  const statusLabel = friendStatusLabel(person.status);
 
   return (
-    <View className="flex-row gap-3 py-3">
+    <View className="flex-row items-center gap-3 py-3">
       <Avatar
         name={person.name}
         uri={person.avatar}
-        size={52}
+        size={48}
         showStatus
         isOnline={person.isOnline}
       />
@@ -40,29 +54,27 @@ export function PersonRow({
         <Text variant="subtitle" numberOfLines={1}>
           {person.name}
         </Text>
-        {subtitle ? (
-          <Text variant="caption" numberOfLines={1}>
-            {subtitle}
+        {statusLabel ? (
+          <Text
+            variant="caption"
+            numberOfLines={1}
+            className={
+              person.status === "friends" ? "text-sky-700" : "text-slate-500"
+            }
+          >
+            {statusLabel}
           </Text>
         ) : null}
-        <Text
-          variant="caption"
-          className={person.isOnline ? "text-success" : "text-slate-400"}
-        >
-          {person.isOnline ? "Online" : "Offline"}
-        </Text>
-        <View className="mt-2">
-          <FriendRequestActions
-            status={person.status}
-            busy={busy}
-            onAdd={onAdd}
-            onCancel={onCancel}
-            onConfirm={onConfirm}
-            onDecline={onDecline}
-            onMessage={onMessage}
-          />
-        </View>
       </View>
+      <FriendRequestActions
+        status={person.status}
+        busy={busy}
+        onAdd={onAdd}
+        onCancel={onCancel}
+        onConfirm={onConfirm}
+        onDecline={onDecline}
+        onMessage={onMessage}
+      />
     </View>
   );
 }

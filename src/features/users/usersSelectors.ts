@@ -37,6 +37,9 @@ export const selectFriends = createSelector(
       .sort((a, b) => a.name.localeCompare(b.name)),
 );
 
+export const selectIncomingCount = (state: RootState) =>
+  state.users.incoming.length;
+
 export const selectIncomingPeople = createSelector(
   [selectUsersState],
   (users): Person[] =>

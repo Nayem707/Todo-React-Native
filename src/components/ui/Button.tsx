@@ -67,8 +67,8 @@ export function Button({
       ) : null}
       <Text
         className={cn(
-          "font-semibold",
-          isSmall ? "text-sm" : "text-base",
+          "font-semibold leading-5",
+          isSmall ? "text-xs" : "text-base",
           labelClass[variant],
         )}
       >

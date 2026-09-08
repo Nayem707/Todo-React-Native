@@ -1,7 +1,8 @@
 import { View } from "react-native";
 import { Check, MessageCircle, UserPlus, X } from "lucide-react-native";
 
-import { Button } from "../../../components/ui";
+import { Button, IconButton } from "../../../components/ui";
+import { colors } from "../../../constants/theme";
 import type { FriendRequestStatus } from "../usersTypes";
 
 type FriendRequestActionsProps = {
@@ -24,48 +25,37 @@ export function FriendRequestActions({
   onMessage,
 }: FriendRequestActionsProps) {
   if (status === "friends") {
+    if (!onMessage) {
+      return null;
+    }
+
     return (
-      <View className="flex-row flex-wrap items-center gap-2">
-        <Button
-          icon={Check}
-          size="sm"
-          variant="secondary"
-          label="Friends"
-          disabled
-        />
-        {onMessage ? (
-          <Button
-            icon={MessageCircle}
-            size="sm"
-            variant="ghost"
-            label="Message"
-            disabled={busy}
-            onPress={onMessage}
-          />
-        ) : null}
-      </View>
+      <IconButton
+        icon={MessageCircle}
+        accessibilityLabel="Message"
+        color={colors.accent}
+        disabled={busy}
+        onPress={onMessage}
+      />
     );
   }
 
   if (status === "request_sent") {
     return (
-      <View className="flex-row flex-wrap items-center gap-2">
-        <Button size="sm" variant="secondary" label="Request Sent" disabled />
-        <Button
-          icon={X}
-          size="sm"
-          variant="ghost"
-          label="Cancel"
-          disabled={busy}
-          onPress={onCancel}
-        />
-      </View>
+      <Button
+        size="sm"
+        variant="ghost"
+        icon={X}
+        label="Cancel"
+        disabled={busy}
+        onPress={onCancel}
+      />
     );
   }
 
   if (status === "request_received") {
     return (
-      <View className="flex-row flex-wrap items-center gap-2">
+      <View className="flex-row items-center gap-2">
         <Button
           icon={Check}
           size="sm"
