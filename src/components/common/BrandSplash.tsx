@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { Animated, Easing, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { appName } from "../../constants/theme";
+
 type BrandSplashProps = {
   onFinish: () => void;
   backgroundColor?: string;
@@ -132,7 +134,7 @@ export function BrandSplash({
           className="mt-8"
         >
           <Text className="text-2xl font-bold tracking-wider text-white">
-            Chat
+            {appName}
           </Text>
         </Animated.View>
       </View>

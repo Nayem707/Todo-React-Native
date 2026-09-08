@@ -29,6 +29,9 @@
   "expo": {
     "android": {
       "package": "com.nayem490.mobileapp"
+    },
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
