@@ -47,6 +47,7 @@ export function FriendRequestActions({
         variant="ghost"
         icon={X}
         label="Cancel"
+        className="border border-slate-300"
         disabled={busy}
         onPress={onCancel}
       />
@@ -57,19 +58,20 @@ export function FriendRequestActions({
     return (
       <View className="flex-row items-center gap-2">
         <Button
+          icon={X}
+          size="sm"
+          variant="ghost"
+          label="Decline"
+          className="border border-slate-300"
+          disabled={busy}
+          onPress={onDecline}
+        />
+        <Button
           icon={Check}
           size="sm"
           label="Confirm"
           disabled={busy}
           onPress={onConfirm}
-        />
-        <Button
-          icon={X}
-          size="sm"
-          variant="ghost"
-          label="Decline"
-          disabled={busy}
-          onPress={onDecline}
         />
       </View>
     );
