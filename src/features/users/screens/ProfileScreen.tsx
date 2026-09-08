@@ -1,7 +1,9 @@
 import { View } from "react-native";
+import { Bell, LogOut, Settings } from "lucide-react-native";
 
 import { Screen } from "../../../components/common";
 import { Avatar, Button, Card, Divider, Text } from "../../../components/ui";
+import { colors, icons } from "../../../constants/theme";
 import { useAuth } from "../../auth/useAuth";
 import { logout } from "../../../store/slices";
 import { useAppDispatch } from "../../../store/hooks";
@@ -22,7 +24,24 @@ export function ProfileScreen() {
         </Text>
         <Divider className="my-6 w-full" />
         <View className="w-full gap-3">
+          <View className="flex-row items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+            <Settings
+              color={colors.muted}
+              size={icons.size.md}
+              strokeWidth={icons.stroke}
+            />
+            <Text variant="muted">Settings will be added later</Text>
+          </View>
+          <View className="flex-row items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+            <Bell
+              color={colors.muted}
+              size={icons.size.md}
+              strokeWidth={icons.stroke}
+            />
+            <Text variant="muted">Notifications will be added later</Text>
+          </View>
           <Button
+            icon={LogOut}
             variant="secondary"
             label="Sign out"
             onPress={() => {

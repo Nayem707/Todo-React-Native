@@ -1,5 +1,6 @@
 import { Redirect, Stack } from "expo-router";
 
+import { HeaderBackButton } from "../../src/components/common";
 import { SessionLoader } from "../../src/features/auth/SessionLoader";
 import { useAuth } from "../../src/features/auth/useAuth";
 
@@ -24,7 +25,13 @@ export default function AuthLayout() {
       }}
     >
       <Stack.Screen name="login" options={{ title: "Sign in" }} />
-      <Stack.Screen name="register" options={{ title: "Create account" }} />
+      <Stack.Screen
+        name="register"
+        options={{
+          title: "Create account",
+          headerLeft: () => <HeaderBackButton />,
+        }}
+      />
     </Stack>
   );
 }

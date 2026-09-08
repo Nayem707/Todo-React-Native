@@ -1,5 +1,7 @@
 import { Pressable, type PressableProps } from "react-native";
+import type { LucideIcon } from "lucide-react-native";
 
+import { icons } from "../../constants/theme";
 import { cn } from "../../utils/cn";
 import { Text } from "./Text";
 
@@ -8,6 +10,7 @@ type ButtonVariant = "primary" | "secondary" | "ghost";
 type ButtonProps = Omit<PressableProps, "children"> & {
   label: string;
   variant?: ButtonVariant;
+  icon?: LucideIcon;
 };
 
 const containerClass: Record<ButtonVariant, string> = {
@@ -22,9 +25,16 @@ const labelClass: Record<ButtonVariant, string> = {
   ghost: "text-slate-700",
 };
 
+const iconColor: Record<ButtonVariant, string> = {
+  primary: "#ffffff",
+  secondary: "#0369a1",
+  ghost: "#334155",
+};
+
 export function Button({
   label,
   variant = "primary",
+  icon: Icon,
   disabled,
   className,
   ...props
@@ -34,13 +44,20 @@ export function Button({
       accessibilityRole="button"
       disabled={disabled}
       className={cn(
-        "items-center justify-center rounded-2xl px-4 py-3",
+        "flex-row items-center justify-center gap-2 rounded-2xl px-4 py-3",
         containerClass[variant],
         disabled && "opacity-50",
         className,
       )}
       {...props}
     >
+      {Icon ? (
+        <Icon
+          color={iconColor[variant]}
+          size={icons.size.sm}
+          strokeWidth={icons.stroke}
+        />
+      ) : null}
       <Text className={cn("text-base font-semibold", labelClass[variant])}>
         {label}
       </Text>

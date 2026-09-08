@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
 import { View } from "react-native";
-import { ChatBubbleLeftRightIcon } from "react-native-heroicons/outline";
+import { MessageCircle, type LucideIcon } from "lucide-react-native";
 
-import { colors } from "../../constants/theme";
+import { colors, icons } from "../../constants/theme";
 import { cn } from "../../utils/cn";
 import { Text } from "./Text";
 
 type EmptyStateProps = {
   title: string;
   subtitle?: string;
-  icon?: ReactNode;
+  icon?: LucideIcon;
   className?: string;
   children?: ReactNode;
 };
@@ -17,7 +17,7 @@ type EmptyStateProps = {
 export function EmptyState({
   title,
   subtitle,
-  icon,
+  icon: Icon = MessageCircle,
   className,
   children,
 }: EmptyStateProps) {
@@ -29,9 +29,11 @@ export function EmptyState({
       )}
     >
       <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-sky-50">
-        {icon ?? (
-          <ChatBubbleLeftRightIcon color={colors.accent} size={28} />
-        )}
+        <Icon
+          color={colors.accent}
+          size={icons.size.lg}
+          strokeWidth={icons.stroke}
+        />
       </View>
       <Text variant="title" className="text-center">
         {title}

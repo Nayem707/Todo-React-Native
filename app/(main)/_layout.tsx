@@ -1,21 +1,34 @@
+import { View } from "react-native";
 import { Redirect, Stack, useRouter } from "expo-router";
-import { UserCircleIcon } from "react-native-heroicons/outline";
+import { MoreVertical, Plus, Search, User } from "lucide-react-native";
 
+import { HeaderBackButton } from "../../src/components/common";
 import { IconButton } from "../../src/components/ui";
-import { colors } from "../../src/constants/theme";
 import { SessionLoader } from "../../src/features/auth/SessionLoader";
 import { useAuth } from "../../src/features/auth/useAuth";
 
-function ProfileHeaderButton() {
+function ChatsHeaderActions() {
   const router = useRouter();
 
   return (
-    <IconButton
-      accessibilityLabel="Profile"
-      onPress={() => router.push("/profile")}
-    >
-      <UserCircleIcon color={colors.ink} size={24} />
-    </IconButton>
+    <View className="flex-row items-center">
+      <IconButton icon={Search} accessibilityLabel="Search chats" disabled />
+      <IconButton
+        icon={Plus}
+        accessibilityLabel="New chat"
+        onPress={() =>
+          router.push({
+            pathname: "/chat/[id]",
+            params: { id: "new" },
+          })
+        }
+      />
+      <IconButton
+        icon={User}
+        accessibilityLabel="Profile"
+        onPress={() => router.push("/profile")}
+      />
+    </View>
   );
 }
 
@@ -43,11 +56,30 @@ export default function MainLayout() {
         name="chats"
         options={{
           title: "Chats",
-          headerRight: () => <ProfileHeaderButton />,
+          headerRight: () => <ChatsHeaderActions />,
         }}
       />
-      <Stack.Screen name="profile" options={{ title: "Profile" }} />
-      <Stack.Screen name="chat/[id]" options={{ title: "Chat" }} />
+      <Stack.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          headerLeft: () => <HeaderBackButton />,
+        }}
+      />
+      <Stack.Screen
+        name="chat/[id]"
+        options={{
+          title: "Chat",
+          headerLeft: () => <HeaderBackButton />,
+          headerRight: () => (
+            <IconButton
+              icon={MoreVertical}
+              accessibilityLabel="More options"
+              disabled
+            />
+          ),
+        }}
+      />
     </Stack>
   );
 }

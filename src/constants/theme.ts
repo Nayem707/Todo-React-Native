@@ -6,6 +6,16 @@ export const colors = {
   success: "#16A34A",
   warning: "#F59E0B",
   danger: "#EF4444",
+  muted: "#64748B",
+} as const;
+
+export const icons = {
+  size: {
+    sm: 18,
+    md: 22,
+    lg: 28,
+  },
+  stroke: 2,
 } as const;
 
 export const appName = "Chat";
