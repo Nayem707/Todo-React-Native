@@ -1,24 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, View } from "react-native";
 import { useLocalSearchParams, useNavigation } from "expo-router";
-import { Check, CheckCheck, CircleAlert, MessageCircle, Paperclip, Send } from "lucide-react-native";
+import { CircleAlert, MessageCircle } from "lucide-react-native";
 
 import {
   KeyboardAvoidingWrapper,
   Screen,
 } from "../../../components/common";
-import {
-  Button,
-  EmptyState,
-  IconButton,
-  Input,
-  Loader,
-  Text,
-} from "../../../components/ui";
-import { colors } from "../../../constants/theme";
+import { Button, EmptyState, Loader, Text } from "../../../components/ui";
 import { socketClient } from "../../../services/socket";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { selectAuthUser } from "../../auth/authSelectors";
+import { ChatComposer } from "../components/ChatComposer";
+import { ChatHeaderActions, ChatHeaderTitle } from "../components/ChatHeader";
+import { ChatWallpaper } from "../components/ChatWallpaper";
+import { DateSeparator } from "../components/DateSeparator";
+import { MessageBubble } from "../components/MessageBubble";
 import {
   selectConversationById,
   selectMessagesByConversation,
@@ -34,63 +31,33 @@ import {
   sendMessage,
   setActiveConversation,
 } from "../chatSlice";
+import { chatTheme } from "../chatTheme";
+import { dateKey, formatDateLabel } from "../chatTime";
 import type { ChatMessage } from "../chatTypes";
 
-function MessageStatus({ message, isMine }: { message: ChatMessage; isMine: boolean }) {
-  if (!isMine) {
-    return null;
+type ChatRow =
+  | { type: "date"; id: string; label: string }
+  | { type: "message"; id: string; message: ChatMessage };
+
+function toChatRows(messages: ChatMessage[]): ChatRow[] {
+  const rows: ChatRow[] = [];
+  let previousKey = "";
+
+  for (const message of messages) {
+    const key = dateKey(message.createdAt);
+    if (key !== previousKey) {
+      rows.push({
+        type: "date",
+        id: `date-${key}`,
+        label: formatDateLabel(message.createdAt) || "Today",
+      });
+      previousKey = key;
+    }
+
+    rows.push({ type: "message", id: message.id, message });
   }
 
-  const othersRead = message.readBy.some(
-    (userId) => userId !== message.senderId,
-  );
-
-  if (othersRead || message.status === "READ") {
-    return <CheckCheck color={colors.accent} size={14} strokeWidth={2} />;
-  }
-
-  if (message.status === "DELIVERED") {
-    return <CheckCheck color={colors.muted} size={14} strokeWidth={2} />;
-  }
-
-  return <Check color={colors.muted} size={14} strokeWidth={2} />;
-}
-
-function MessageBubble({
-  message,
-  isMine,
-}: {
-  message: ChatMessage;
-  isMine: boolean;
-}) {
-  return (
-    <View className={`mb-2 max-w-[80%] ${isMine ? "self-end" : "self-start"}`}>
-      <View
-        className={`rounded-3xl px-4 py-3 ${
-          isMine ? "bg-accent" : "border border-slate-200 bg-white"
-        }`}
-      >
-        {!isMine && message.senderName ? (
-          <Text variant="caption" className="mb-1 text-sky-700">
-            {message.senderName}
-          </Text>
-        ) : null}
-        <Text className={isMine ? "text-white" : "text-slate-900"}>
-          {message.content || " "}
-        </Text>
-      </View>
-      <View
-        className={`mt-1 flex-row items-center gap-1 ${
-          isMine ? "justify-end" : "justify-start"
-        }`}
-      >
-        {message.editedAt ? (
-          <Text variant="caption">Edited</Text>
-        ) : null}
-        <MessageStatus message={message} isMine={isMine} />
-      </View>
-    </View>
-  );
+  return rows;
 }
 
 export function ChatScreen() {
@@ -129,13 +96,42 @@ export function ChatScreen() {
   const livePresence = useAppSelector((state) =>
     selectUserPresence(state, peer?.userId),
   );
+  const isOnline =
+    livePresence !== undefined
+      ? livePresence
+      : peer?.status === "online" || conversation?.status === "online";
   const othersTyping = typingIds.filter((userId) => userId !== user?.id);
+  const rows = useMemo(() => toChatRows(messages), [messages]);
+
+  const subtitle = othersTyping.length
+    ? "typing…"
+    : isOnline
+      ? "online"
+      : "tap here for contact info";
 
   useEffect(() => {
     navigation.setOptions({
-      title: conversation?.name ?? "Chat",
+      title: "",
+      headerTitleAlign: "left",
+      headerStyle: { backgroundColor: "#FFFFFF" },
+      headerTitle: () => (
+        <ChatHeaderTitle
+          name={conversation?.name ?? "Chat"}
+          subtitle={subtitle}
+          avatar={conversation?.avatar ?? peer?.avatar}
+          isOnline={Boolean(isOnline)}
+        />
+      ),
+      headerRight: () => <ChatHeaderActions />,
     });
-  }, [conversation?.name, navigation]);
+  }, [
+    conversation?.avatar,
+    conversation?.name,
+    isOnline,
+    navigation,
+    peer?.avatar,
+    subtitle,
+  ]);
 
   useEffect(() => {
     if (!conversationId) {
@@ -199,7 +195,8 @@ export function ChatScreen() {
     messagesStatus === "loading" && messages.length === 0;
 
   return (
-    <Screen>
+    <Screen className="bg-transparent" style={{ backgroundColor: chatTheme.wallpaper }}>
+      <ChatWallpaper />
       <KeyboardAvoidingWrapper>
         {isInitialLoading ? (
           <Loader className="flex-1" size="large" />
@@ -224,9 +221,9 @@ export function ChatScreen() {
           </View>
         ) : (
           <FlatList
-            data={messages}
+            data={rows}
             keyExtractor={(item) => item.id}
-            contentContainerClassName="grow justify-end px-4 py-4"
+            contentContainerClassName="grow justify-end px-3 py-3"
             ListEmptyComponent={
               <View className="flex-1 justify-center py-10">
                 <EmptyState
@@ -240,48 +237,32 @@ export function ChatScreen() {
                 />
               </View>
             }
-            renderItem={({ item }) => (
-              <MessageBubble
-                message={item}
-                isMine={item.senderId === user?.id}
-              />
-            )}
+            renderItem={({ item }) =>
+              item.type === "date" ? (
+                <DateSeparator label={item.label} />
+              ) : (
+                <MessageBubble
+                  message={item.message}
+                  isMine={item.message.senderId === user?.id}
+                  showSender={conversation?.type === "GROUP"}
+                />
+              )
+            }
           />
         )}
         {othersTyping.length > 0 ? (
           <Text variant="caption" className="px-5 pb-1">
-            {livePresence || peer?.status === "online"
-              ? `${conversation?.name ?? "Someone"} is typing…`
-              : "Typing…"}
+            {conversation?.name ?? "Someone"} is typing…
           </Text>
         ) : null}
-        <View className="flex-row items-center gap-2 px-4 pb-4">
-          <IconButton
-            icon={Paperclip}
-            accessibilityLabel="Attach file"
-            disabled
-          />
-          <View className="flex-1">
-            <Input
-              value={draft}
-              onChangeText={handleChangeText}
-              placeholder="Message"
-              onSubmitEditing={() => {
-                void handleSend();
-              }}
-              returnKeyType="send"
-            />
-          </View>
-          <IconButton
-            icon={Send}
-            color={colors.accent}
-            accessibilityLabel="Send message"
-            disabled={!draft.trim() || sending}
-            onPress={() => {
-              void handleSend();
-            }}
-          />
-        </View>
+        <ChatComposer
+          value={draft}
+          sending={sending}
+          onChangeText={handleChangeText}
+          onSend={() => {
+            void handleSend();
+          }}
+        />
       </KeyboardAvoidingWrapper>
     </Screen>
   );

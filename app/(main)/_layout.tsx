@@ -66,12 +66,14 @@ export default function MainLayout() {
       <Stack.Screen
         name="chat/[id]"
         options={{
-          title: "Chat",
+          title: "",
+          headerTitleAlign: "left",
+          headerStyle: { backgroundColor: "#FFFFFF" },
           headerLeft: () => <HeaderBackButton />,
           headerRight: () => (
             <View className="flex-row items-center">
-              <IconButton icon={Phone} accessibilityLabel="Voice call" />
               <IconButton icon={Video} accessibilityLabel="Video call" />
+              <IconButton icon={Phone} accessibilityLabel="Voice call" />
               <IconButton
                 icon={MoreVertical}
                 accessibilityLabel="More options"
