@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { Redirect, Stack, useRouter } from "expo-router";
-import { MoreVertical, User, UserPlus } from "lucide-react-native";
+import { MoreVertical, Phone, User, UserPlus, Video } from "lucide-react-native";
 
 import { HeaderBackButton } from "../../src/components/common";
 import { IconButton } from "../../src/components/ui";
@@ -69,11 +69,14 @@ export default function MainLayout() {
           title: "Chat",
           headerLeft: () => <HeaderBackButton />,
           headerRight: () => (
-            <IconButton
-              icon={MoreVertical}
-              accessibilityLabel="More options"
-              disabled
-            />
+            <View className="flex-row items-center">
+              <IconButton icon={Phone} accessibilityLabel="Voice call" />
+              <IconButton icon={Video} accessibilityLabel="Video call" />
+              <IconButton
+                icon={MoreVertical}
+                accessibilityLabel="More options"
+              />
+            </View>
           ),
         }}
       />
