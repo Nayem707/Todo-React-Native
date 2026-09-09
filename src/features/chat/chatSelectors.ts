@@ -1,7 +1,10 @@
 import { createSelector } from "@reduxjs/toolkit";
 
 import type { RootState } from "../../store";
-import type { Conversation } from "./chatTypes";
+import type { ChatMessage, Conversation } from "./chatTypes";
+
+const EMPTY_MESSAGES: ChatMessage[] = [];
+const EMPTY_TYPING_IDS: string[] = [];
 
 export const selectChatState = (state: RootState) => state.chat;
 
@@ -29,10 +32,10 @@ export const selectMessagesByConversation = (
   conversationId: string | undefined,
 ) => {
   if (!conversationId) {
-    return [];
+    return EMPTY_MESSAGES;
   }
 
-  return state.chat.messages[conversationId] ?? [];
+  return state.chat.messages[conversationId] ?? EMPTY_MESSAGES;
 };
 
 export const selectConversationListStatus = (state: RootState) =>
@@ -60,7 +63,10 @@ export const selectSendPending = (
 export const selectTypingUserIds = (
   state: RootState,
   conversationId: string | undefined,
-) => (conversationId ? state.chat.typing[conversationId] ?? [] : []);
+) =>
+  conversationId
+    ? state.chat.typing[conversationId] ?? EMPTY_TYPING_IDS
+    : EMPTY_TYPING_IDS;
 
 export const selectUserPresence = (state: RootState, userId: string | undefined) => {
   if (!userId) {

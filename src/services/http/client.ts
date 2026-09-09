@@ -2,6 +2,7 @@ import { AuthError } from "../../features/auth/errors";
 import { mapHttpError } from "./errors";
 import { axiosInstance } from "./instance";
 import type { ApiRequestOptions } from "./types";
+import { joinApiUrl } from "./url";
 
 async function request<T>(
   path: string,
@@ -16,7 +17,7 @@ async function request<T>(
 
   try {
     const response = await axiosInstance.request<T>({
-      url: path,
+      url: joinApiUrl(path),
       method,
       data: body,
       withAuth: auth,

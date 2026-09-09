@@ -11,8 +11,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function unwrapPayload(value: unknown): unknown {
-  if (isRecord(value) && "data" in value) {
+  if (!isRecord(value)) {
+    return value;
+  }
+
+  if ("data" in value) {
     return value.data;
+  }
+
+  // Socket emits wrap entities as `{ message: ... }`.
+  if (isRecord(value.message)) {
+    return value.message;
   }
 
   return value;
@@ -222,10 +231,25 @@ export function mapTypingPayload(value: unknown): {
     return null;
   }
 
+  const state = asString(raw.state);
+  let isTyping: boolean | null = null;
+
+  if (state === "start") {
+    isTyping = true;
+  } else if (state === "stop") {
+    isTyping = false;
+  } else if (typeof raw.isTyping === "boolean") {
+    isTyping = raw.isTyping;
+  }
+
+  if (isTyping === null) {
+    return null;
+  }
+
   return {
     conversationId,
     userId: asString(raw.userId) ?? asString(raw.senderId),
-    isTyping: raw.isTyping !== false,
+    isTyping,
   };
 }
 

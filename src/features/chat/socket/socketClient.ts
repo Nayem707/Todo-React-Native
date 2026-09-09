@@ -2,7 +2,11 @@ import { io, type Socket } from "socket.io-client";
 
 import { getSocketUrl } from "../../../constants/env";
 import { loadSession } from "../../auth/sessionStorage";
-import { SOCKET_EVENTS, type SocketEventName } from "./events";
+import {
+  SOCKET_EVENTS,
+  SOCKET_INBOUND_EVENTS,
+  type SocketEventName,
+} from "./events";
 
 type SocketHandler = (event: SocketEventName, payload: unknown) => void;
 
@@ -15,6 +19,7 @@ class SocketClient {
   private socket: Socket | null = null;
   private handlers = new Set<SocketHandler>();
   private joinedRooms = new Set<string>();
+  private connectPromise: Promise<void> | null = null;
 
   subscribe(handler: SocketHandler): () => void {
     this.handlers.add(handler);
@@ -28,6 +33,18 @@ class SocketClient {
   }
 
   async connect(): Promise<void> {
+    if (this.connectPromise) {
+      return this.connectPromise;
+    }
+
+    this.connectPromise = this.connectInternal().finally(() => {
+      this.connectPromise = null;
+    });
+
+    return this.connectPromise;
+  }
+
+  private async connectInternal(): Promise<void> {
     const token = await resolveAuthToken();
 
     if (!token) {
@@ -38,13 +55,19 @@ class SocketClient {
     if (this.socket) {
       this.socket.auth = { token };
       if (!this.socket.connected) {
-        this.socket.connect();
+        await new Promise<void>((resolve) => {
+          this.socket?.once("connect", () => resolve());
+          this.socket?.once("connect_error", () => resolve());
+          this.socket?.connect();
+        });
       }
       return;
     }
 
     this.socket = io(getSocketUrl(), {
       auth: { token },
+      transports: ["websocket", "polling"],
+      withCredentials: true,
       autoConnect: true,
       reconnection: true,
       reconnectionAttempts: Infinity,
@@ -54,10 +77,18 @@ class SocketClient {
     });
 
     this.bindSocket(this.socket);
+
+    if (!this.socket.connected) {
+      await new Promise<void>((resolve) => {
+        this.socket?.once("connect", () => resolve());
+        this.socket?.once("connect_error", () => resolve());
+      });
+    }
   }
 
   disconnect(): void {
     this.joinedRooms.clear();
+    this.connectPromise = null;
 
     if (!this.socket) {
       return;
@@ -74,7 +105,7 @@ class SocketClient {
     }
 
     this.joinedRooms.add(conversationId);
-    this.socket?.emit(SOCKET_EVENTS.join, { conversationId });
+    this.emitJoin(conversationId);
   }
 
   leaveConversation(conversationId: string): void {
@@ -83,15 +114,30 @@ class SocketClient {
     }
 
     this.joinedRooms.delete(conversationId);
-    this.socket?.emit(SOCKET_EVENTS.leave, { conversationId });
+    this.socket?.emit(SOCKET_EVENTS.leaveConversation, { conversationId });
   }
 
   emitTyping(conversationId: string, isTyping: boolean): void {
-    if (!conversationId) {
+    if (!conversationId || !this.socket?.connected) {
       return;
     }
 
-    this.socket?.emit(SOCKET_EVENTS.typing, { conversationId, isTyping });
+    if (!this.joinedRooms.has(conversationId)) {
+      this.joinConversation(conversationId);
+    }
+
+    this.socket.emit(
+      isTyping ? SOCKET_EVENTS.typingStart : SOCKET_EVENTS.typingStop,
+      { conversationId },
+    );
+  }
+
+  private emitJoin(conversationId: string) {
+    if (!this.socket?.connected) {
+      return;
+    }
+
+    this.socket.emit(SOCKET_EVENTS.joinConversation, { conversationId });
   }
 
   private bindSocket(socket: Socket) {
@@ -105,22 +151,11 @@ class SocketClient {
 
     socket.on("connect", () => {
       for (const conversationId of this.joinedRooms) {
-        socket.emit(SOCKET_EVENTS.join, { conversationId });
+        this.emitJoin(conversationId);
       }
     });
 
-    const inbound: SocketEventName[] = [
-      SOCKET_EVENTS.newMessage,
-      SOCKET_EVENTS.messageEdited,
-      SOCKET_EVENTS.messageDeleted,
-      SOCKET_EVENTS.typing,
-      SOCKET_EVENTS.userOnline,
-      SOCKET_EVENTS.userOffline,
-      SOCKET_EVENTS.online,
-      SOCKET_EVENTS.offline,
-    ];
-
-    for (const event of inbound) {
+    for (const event of SOCKET_INBOUND_EVENTS) {
       socket.on(event, (payload: unknown) => {
         this.dispatch(event, payload);
       });

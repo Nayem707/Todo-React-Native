@@ -138,12 +138,21 @@ export function ChatScreen() {
       return;
     }
 
+    let active = true;
+
     dispatch(setActiveConversation(conversationId));
-    socketClient.joinConversation(conversationId);
     void dispatch(fetchConversation(conversationId));
     void dispatch(fetchMessages({ conversationId }));
 
+    void socketClient.connect().then(() => {
+      if (!active) {
+        return;
+      }
+      socketClient.joinConversation(conversationId);
+    });
+
     return () => {
+      active = false;
       socketClient.leaveConversation(conversationId);
       dispatch(setActiveConversation(null));
       socketClient.emitTyping(conversationId, false);

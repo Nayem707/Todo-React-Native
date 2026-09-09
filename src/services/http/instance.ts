@@ -7,6 +7,7 @@ import { mapAuthUser } from "../../features/auth/mapUser";
 import { loadSession, updateSession } from "../../features/auth/sessionStorage";
 import { isRecord, mapHttpError, toApiError } from "./errors";
 import type { ApiEnvelope } from "./types";
+import { joinApiUrl } from "./url";
 
 export const HTTP_TIMEOUT_MS = 15_000;
 
@@ -53,7 +54,7 @@ async function rotateTokens() {
       }
 
       const { data } = await axiosInstance.request<RefreshPayload>({
-        url: authEndpoints.refresh,
+        url: joinApiUrl(authEndpoints.refresh),
         method: "POST",
         data: { refreshToken: session.refreshToken },
         withAuth: false,
@@ -74,7 +75,10 @@ async function rotateTokens() {
 }
 
 axiosInstance.interceptors.request.use(async (config) => {
-  config.baseURL = await resolveBaseUrl();
+  if (!/^https?:\/\//i.test(config.url ?? "")) {
+    config.baseURL = await resolveBaseUrl();
+  }
+
   const headers = AxiosHeaders.from(config.headers ?? {});
   config.headers = headers;
 
