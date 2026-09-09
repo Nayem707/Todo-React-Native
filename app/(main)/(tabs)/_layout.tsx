@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Inbox, MessageCircle, Settings, UserPlus } from "lucide-react-native";
+import { MessageCircle, Settings, UserPlus } from "lucide-react-native";
 
 import { colors, icons } from "../../../src/constants/theme";
 import { selectIncomingCount } from "../../../src/features/users/usersSelectors";
@@ -56,22 +56,13 @@ export default function TabsLayout() {
         name="people"
         options={{
           title: "People",
-          tabBarIcon: ({ color }) => (
-            <UserPlus color={color} size={22} strokeWidth={icons.stroke} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="requests"
-        options={{
-          title: "Requests",
           tabBarBadge: incomingCount > 0 ? incomingCount : undefined,
           tabBarBadgeStyle: {
             backgroundColor: colors.accent,
             color: "#FFFFFF",
           },
           tabBarIcon: ({ color }) => (
-            <Inbox color={color} size={22} strokeWidth={icons.stroke} />
+            <UserPlus color={color} size={22} strokeWidth={icons.stroke} />
           ),
         }}
       />

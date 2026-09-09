@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import { useFocusEffect } from "expo-router";
-import { Search, Users } from "lucide-react-native";
+import { Inbox, Search, Users } from "lucide-react-native";
 
 import { Screen } from "../../../components/common";
 import { Input, Text } from "../../../components/ui";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { PeopleTabs, type PeopleTab } from "../components/PeopleTabs";
 import { PersonList } from "../components/PersonList";
 import {
   selectActionError,
@@ -13,6 +14,8 @@ import {
   selectFriends,
   selectGraphError,
   selectGraphStatus,
+  selectIncomingCount,
+  selectIncomingPeople,
   selectSearchError,
   selectSearchPeople,
   selectSearchStatus,
@@ -23,7 +26,11 @@ import { MIN_USER_SEARCH_LENGTH } from "../usersTypes";
 export function PeopleScreen() {
   const dispatch = useAppDispatch();
   const [query, setQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<PeopleTab>("friends");
+
   const friends = useAppSelector(selectFriends);
+  const incoming = useAppSelector(selectIncomingPeople);
+  const incomingCount = useAppSelector(selectIncomingCount);
   const searchPeople = useAppSelector(selectSearchPeople);
   const graphStatus = useAppSelector(selectGraphStatus);
   const graphError = useAppSelector(selectGraphError);
@@ -34,7 +41,9 @@ export function PeopleScreen() {
 
   const trimmedQuery = query.trim();
   const isSearching = trimmedQuery.length >= MIN_USER_SEARCH_LENGTH;
-  const people = isSearching ? searchPeople : friends;
+  const tabPeople = activeTab === "friends" ? friends : incoming;
+  const people = isSearching ? searchPeople : tabPeople;
+
   const isListLoading =
     (isSearching &&
       (searchStatus === "loading" || searchStatus === "idle") &&
@@ -61,11 +70,34 @@ export function PeopleScreen() {
     return () => clearTimeout(timeout);
   }, [dispatch, isSearching, trimmedQuery]);
 
+  const emptyCopy = isSearching
+    ? {
+        icon: Search,
+        title: "No people found",
+        subtitle: "Try a different name or username.",
+      }
+    : activeTab === "friends"
+      ? {
+          icon: Users,
+          title: "No friends yet",
+          subtitle: "Search above to find people and send a friend request.",
+        }
+      : {
+          icon: Inbox,
+          title: "No friend requests",
+          subtitle: "When someone sends you a request, it will show up here.",
+        };
+
   return (
     <Screen safe>
       <View className="px-5 pb-2 pt-4">
         <Text variant="title">People</Text>
       </View>
+      <PeopleTabs
+        active={activeTab}
+        requestsCount={incomingCount}
+        onChange={setActiveTab}
+      />
       <View className="px-5 pb-3">
         <Input
           leftIcon={Search}
@@ -80,13 +112,9 @@ export function PeopleScreen() {
         people={people}
         isLoading={isListLoading}
         error={listError}
-        emptyIcon={isSearching ? Search : Users}
-        emptyTitle={isSearching ? "No people found" : "No friends yet"}
-        emptySubtitle={
-          isSearching
-            ? "Try a different name or username."
-            : "Enter at least 2 characters to search by name or username."
-        }
+        emptyIcon={emptyCopy.icon}
+        emptyTitle={emptyCopy.title}
+        emptySubtitle={emptyCopy.subtitle}
         actionError={actionError}
         actionPendingUserId={actionPendingUserId}
         onRetry={() => {
