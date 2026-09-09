@@ -7,7 +7,7 @@ import {
   KeyboardAvoidingWrapper,
   Screen,
 } from "../../../components/common";
-import { Button, EmptyState, Loader, Text } from "../../../components/ui";
+import { Button, EmptyState, Loader } from "../../../components/ui";
 import { socketClient } from "../socket";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { selectAuthUser } from "../../auth/authSelectors";
@@ -259,11 +259,6 @@ export function ChatScreen() {
             }
           />
         )}
-        {othersTyping.length > 0 ? (
-          <Text variant="caption" className="px-5 pb-1">
-            {conversation?.name ?? "Someone"} is typing…
-          </Text>
-        ) : null}
         <ChatComposer
           value={draft}
           sending={sending}

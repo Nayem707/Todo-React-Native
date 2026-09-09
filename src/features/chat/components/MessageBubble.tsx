@@ -22,7 +22,6 @@ function Ticks({ message }: { message: ChatMessage }) {
   if (message.status === "DELIVERED") {
     return <CheckCheck color={chatTheme.timestamp} size={14} strokeWidth={2.2} />;
   }
-
   return <Check color={chatTheme.timestamp} size={14} strokeWidth={2.2} />;
 }
 
@@ -51,18 +50,22 @@ export function MessageBubble({
             {message.senderName}
           </Text>
         ) : null}
+        
         <Text className="text-[15px] leading-5 text-slate-900">
           {message.content || " "}
         </Text>
-        <View className="mt-0.5 flex-row items-center justify-end gap-1">
+
+        <View className="flex-row items-center justify-end gap-1">
           {message.editedAt ? (
             <Text className="text-[10px]" style={{ color: chatTheme.timestamp }}>
               Edited
             </Text>
           ) : null}
-          <Text className="text-[11px]" style={{ color: chatTheme.timestamp }}>
+
+          <Text className="text-xs" style={{ color: chatTheme.timestamp }}>
             {formatMessageTime(message.createdAt)}
           </Text>
+
           {isMine ? <Ticks message={message} /> : null}
         </View>
       </View>
