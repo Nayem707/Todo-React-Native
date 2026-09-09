@@ -1,4 +1,4 @@
-import type { DirectoryUser } from "../../features/users/usersTypes";
+import type { DirectoryUser } from "./usersTypes";
 
 export const API_FRIENDSHIP_STATUSES = [
   "NONE",

@@ -7,7 +7,7 @@ import { Provider } from "react-redux";
 
 import "../global.css";
 
-import { restoreSession } from "../src/store/slices";
+import { restoreSession } from "../src/features/auth/authSlice";
 import { SocketBridge } from "../src/features/chat/SocketBridge";
 import { useAppDispatch } from "../src/store/hooks";
 import { store } from "../src/store";

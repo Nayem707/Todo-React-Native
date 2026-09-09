@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import type { AuthSession, AuthUser } from "../../features/auth/authTypes";
+import type { AuthSession, AuthUser } from "./authTypes";
 import { mapAuthUser } from "./mapUser";
 
 const SESSION_KEY = "auth.session.v2";

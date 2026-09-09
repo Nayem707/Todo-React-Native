@@ -1,9 +1,8 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-import { conversationsApi } from "../../services/conversations";
-import { messagesApi } from "../../services/messages";
-import { toAuthErrorMessage } from "../../services/auth/errors";
-import { login, logout, register } from "../../store/slices/authSlice";
+import { login, logout, register } from "../auth/authSlice";
+import { toAuthErrorMessage } from "../auth/errors";
+import { chatApi } from "./chatApi";
 import type {
   ChatMessage,
   Conversation,
@@ -116,7 +115,7 @@ export const fetchConversations = createAsyncThunk<
   { rejectValue: string }
 >("chat/fetchConversations", async (_arg, { rejectWithValue }) => {
   try {
-    return await conversationsApi.list();
+    return await chatApi.listConversations();
   } catch (error) {
     return rejectWithValue(
       toAuthErrorMessage(error, "Unable to load conversations."),
@@ -130,7 +129,7 @@ export const fetchConversation = createAsyncThunk<
   { rejectValue: string }
 >("chat/fetchConversation", async (conversationId, { rejectWithValue }) => {
   try {
-    return await conversationsApi.get(conversationId);
+    return await chatApi.getConversation(conversationId);
   } catch (error) {
     return rejectWithValue(
       toAuthErrorMessage(error, "Unable to load conversation."),
@@ -144,7 +143,7 @@ export const openDirectConversation = createAsyncThunk<
   { rejectValue: string }
 >("chat/openDirectConversation", async (userId, { rejectWithValue }) => {
   try {
-    return await conversationsApi.createDirect(userId);
+    return await chatApi.createDirect(userId);
   } catch (error) {
     return rejectWithValue(
       toAuthErrorMessage(error, "Unable to start conversation."),
@@ -160,7 +159,7 @@ export const fetchMessages = createAsyncThunk<
   "chat/fetchMessages",
   async ({ conversationId, page = 1 }, { rejectWithValue }) => {
     try {
-      const result = await messagesApi.list(conversationId, page, 50);
+      const result = await chatApi.listMessages(conversationId, page, 50);
       return { conversationId, page: result };
     } catch (error) {
       return rejectWithValue(
@@ -170,7 +169,7 @@ export const fetchMessages = createAsyncThunk<
   },
 );
 
-type MessagesPageLike = Awaited<ReturnType<typeof messagesApi.list>>;
+type MessagesPageLike = Awaited<ReturnType<typeof chatApi.listMessages>>;
 
 export const sendMessage = createAsyncThunk<
   ChatMessage,
@@ -180,7 +179,7 @@ export const sendMessage = createAsyncThunk<
   "chat/sendMessage",
   async ({ conversationId, content }, { rejectWithValue }) => {
     try {
-      return await messagesApi.send(conversationId, content);
+      return await chatApi.sendMessage(conversationId, content);
     } catch (error) {
       return rejectWithValue(
         toAuthErrorMessage(error, "Unable to send message."),

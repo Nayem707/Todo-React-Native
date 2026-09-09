@@ -1,10 +1,10 @@
-import { mapDirectoryUser } from "../users/mapDirectoryUser";
+import { mapDirectoryUser } from "./mapDirectoryUser";
 import {
   API_FRIENDSHIP_STATUSES,
   type ApiFriendshipStatus,
   type FriendRequestRecord,
   type FriendshipRecord,
-} from "./types";
+} from "./friendsTypes";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object";

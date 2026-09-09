@@ -14,7 +14,7 @@ import {
 import { KeyboardAvoidingWrapper, Screen } from "../../../components/common";
 import { Button, Card, IconButton, Input, Text } from "../../../components/ui";
 import { colors } from "../../../constants/theme";
-import { register } from "../../../store/slices";
+import { register } from "../authSlice";
 import { useAppDispatch } from "../../../store/hooks";
 
 export function RegisterScreen() {

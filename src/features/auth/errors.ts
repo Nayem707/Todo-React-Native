@@ -1,4 +1,4 @@
-import type { AuthApiErrorDetail } from "../../features/auth/authTypes";
+import type { AuthApiErrorDetail } from "./authTypes";
 
 export class AuthError extends Error {
   code?: string;

@@ -1,14 +1,14 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-import { friendsApi } from "../../services/friends";
+import { login, logout, register } from "../auth/authSlice";
+import { toAuthErrorMessage } from "../auth/errors";
+import { friendsApi } from "./friendsApi";
 import type {
   FriendGraph,
   FriendRequestRecord,
   FriendshipRecord,
-} from "../../services/friends/types";
-import { toAuthErrorMessage } from "../../services/auth/errors";
-import { usersApi } from "../../services/users";
-import { login, logout, register } from "../../store/slices/authSlice";
+} from "./friendsTypes";
+import { usersApi } from "./usersApi";
 import {
   MIN_USER_SEARCH_LENGTH,
   type DirectoryUser,

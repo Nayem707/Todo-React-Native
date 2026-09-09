@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { socketClient } from "../../services/socket";
-import { SOCKET_EVENTS } from "../../services/socket/events";
+import { SOCKET_EVENTS, socketClient } from "./socket";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { selectIsAuthenticated } from "../auth/authSelectors";
 import {

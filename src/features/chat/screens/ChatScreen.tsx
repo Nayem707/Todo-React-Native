@@ -8,7 +8,7 @@ import {
   Screen,
 } from "../../../components/common";
 import { Button, EmptyState, Loader, Text } from "../../../components/ui";
-import { socketClient } from "../../../services/socket";
+import { socketClient } from "../socket";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { selectAuthUser } from "../../auth/authSelectors";
 import { ChatComposer } from "../components/ChatComposer";

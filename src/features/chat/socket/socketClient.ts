@@ -1,7 +1,7 @@
 import { io, type Socket } from "socket.io-client";
 
-import { getSocketUrl } from "../../constants/env";
-import { loadSession } from "../auth/sessionStorage";
+import { getSocketUrl } from "../../../constants/env";
+import { loadSession } from "../../auth/sessionStorage";
 import { SOCKET_EVENTS, type SocketEventName } from "./events";
 
 type SocketHandler = (event: SocketEventName, payload: unknown) => void;

@@ -1,4 +1,4 @@
-import type { FriendshipRecord } from "../../services/friends/types";
+import type { FriendshipRecord } from "./friendsTypes";
 import type { DirectoryUser, FriendRequestStatus, Person } from "./usersTypes";
 
 export function toUiStatus(

@@ -5,7 +5,7 @@ import { Screen } from "../../../components/common";
 import { Avatar, Button, Card, Divider, Text } from "../../../components/ui";
 import { colors, icons } from "../../../constants/theme";
 import { useAuth } from "../../auth/useAuth";
-import { logout } from "../../../store/slices";
+import { logout } from "../../auth/authSlice";
 import { useAppDispatch } from "../../../store/hooks";
 
 export function ProfileScreen() {

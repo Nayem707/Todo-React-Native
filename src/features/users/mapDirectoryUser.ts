@@ -1,5 +1,5 @@
 import { getApiBaseUrl } from "../../constants/env";
-import type { DirectoryUser } from "../../features/users/usersTypes";
+import type { DirectoryUser } from "./usersTypes";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object";

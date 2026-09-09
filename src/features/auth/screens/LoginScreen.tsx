@@ -6,7 +6,7 @@ import { CircleAlert, Eye, EyeOff, Lock, LogIn, Mail } from "lucide-react-native
 import { KeyboardAvoidingWrapper, Screen } from "../../../components/common";
 import { Button, Card, IconButton, Input, Text } from "../../../components/ui";
 import { colors } from "../../../constants/theme";
-import { login } from "../../../store/slices";
+import { login } from "../authSlice";
 import { useAppDispatch } from "../../../store/hooks";
 
 export function LoginScreen() {

@@ -1,9 +1,10 @@
+import { apiClient } from "../../services/http";
 import type {
   AuthUser,
   LoginCredentials,
   RegisterPayload,
-} from "../../features/auth/authTypes";
-import { apiClient } from "../http/client";
+} from "./authTypes";
+import { authEndpoints } from "./authEndpoints";
 import { AuthError } from "./errors";
 import { mapAuthUser } from "./mapUser";
 import {
@@ -11,14 +12,6 @@ import {
   loadSession,
   saveSession,
 } from "./sessionStorage";
-
-const AUTH = {
-  register: "/auth/register",
-  login: "/auth/login",
-  refresh: "/auth/refresh",
-  logout: "/auth/logout",
-  me: "/auth/me",
-} as const;
 
 type AuthTokensPayload = {
   accessToken: string;
@@ -43,35 +36,41 @@ async function persistAuthPayload(payload: AuthTokensPayload): Promise<AuthUser>
   return user;
 }
 
-export const authService = {
+export const authApi = {
   async login(credentials: LoginCredentials): Promise<AuthUser> {
-    const payload = await apiClient.request<AuthTokensPayload>(AUTH.login, {
-      method: "POST",
-      body: {
-        email: credentials.email.trim().toLowerCase(),
-        password: credentials.password,
+    const payload = await apiClient.request<AuthTokensPayload>(
+      authEndpoints.login,
+      {
+        method: "POST",
+        body: {
+          email: credentials.email.trim().toLowerCase(),
+          password: credentials.password,
+        },
       },
-    });
+    );
 
     return persistAuthPayload(payload);
   },
 
   async register(payload: RegisterPayload): Promise<AuthUser> {
-    const response = await apiClient.request<AuthTokensPayload>(AUTH.register, {
-      method: "POST",
-      body: {
-        name: payload.name.trim(),
-        email: payload.email.trim().toLowerCase(),
-        password: payload.password,
+    const response = await apiClient.request<AuthTokensPayload>(
+      authEndpoints.register,
+      {
+        method: "POST",
+        body: {
+          name: payload.name.trim(),
+          email: payload.email.trim().toLowerCase(),
+          password: payload.password,
+        },
       },
-    });
+    );
 
     return persistAuthPayload(response);
   },
 
   async logout(): Promise<void> {
     try {
-      await apiClient.request(AUTH.logout, {
+      await apiClient.request(authEndpoints.logout, {
         method: "POST",
         auth: true,
       });
@@ -90,7 +89,7 @@ export const authService = {
     }
 
     try {
-      const me = await apiClient.request<unknown>(AUTH.me, {
+      const me = await apiClient.request<unknown>(authEndpoints.me, {
         method: "GET",
         auth: true,
       });

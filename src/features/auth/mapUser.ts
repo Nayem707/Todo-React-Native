@@ -1,4 +1,4 @@
-import type { AuthUser } from "../../features/auth/authTypes";
+import type { AuthUser } from "./authTypes";
 import { AuthError } from "./errors";
 
 export function mapAuthUser(value: unknown): AuthUser {

@@ -4,9 +4,9 @@ import {
   type PayloadAction,
 } from "@reduxjs/toolkit";
 
-import type { AuthUser, LoginCredentials, RegisterPayload } from "../../features/auth/authTypes";
-import { authService } from "../../services/auth";
-import { toAuthErrorMessage } from "../../services/auth/errors";
+import { authApi } from "./authApi";
+import type { AuthUser, LoginCredentials, RegisterPayload } from "./authTypes";
+import { toAuthErrorMessage } from "./errors";
 
 type AuthState = {
   user: AuthUser | null;
@@ -28,7 +28,7 @@ function applySession(state: AuthState, user: AuthUser | null) {
 
 export const restoreSession = createAsyncThunk(
   "auth/restoreSession",
-  async () => authService.restoreSession(),
+  async () => authApi.restoreSession(),
 );
 
 export const login = createAsyncThunk<
@@ -37,7 +37,7 @@ export const login = createAsyncThunk<
   { rejectValue: string }
 >("auth/login", async (credentials, { rejectWithValue }) => {
   try {
-    return await authService.login(credentials);
+    return await authApi.login(credentials);
   } catch (error) {
     return rejectWithValue(toAuthErrorMessage(error, "Sign in failed."));
   }
@@ -49,14 +49,14 @@ export const register = createAsyncThunk<
   { rejectValue: string }
 >("auth/register", async (payload, { rejectWithValue }) => {
   try {
-    return await authService.register(payload);
+    return await authApi.register(payload);
   } catch (error) {
     return rejectWithValue(toAuthErrorMessage(error, "Registration failed."));
   }
 });
 
 export const logout = createAsyncThunk("auth/logout", async () => {
-  await authService.logout();
+  await authApi.logout();
 });
 
 const authSlice = createSlice({

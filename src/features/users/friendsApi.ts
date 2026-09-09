@@ -1,31 +1,18 @@
+import { apiClient } from "../../services/http";
 import { AuthError } from "../auth/errors";
-import { apiClient } from "../http/client";
-import { mapDirectoryUsers } from "../users/mapDirectoryUser";
-import { mapFriendshipStatus, mapFriendRequests } from "./mappers";
+import { friendsEndpoints } from "./friendsEndpoints";
+import { mapFriendshipStatus, mapFriendRequests } from "./friendsMappers";
 import type {
   FriendGraph,
   FriendRequestRecord,
   FriendshipRecord,
-} from "./types";
-import type { DirectoryUser } from "../../features/users/usersTypes";
-
-const FRIENDS = {
-  list: "/friends",
-  request: "/friends/request",
-  incoming: "/friends/requests/incoming",
-  sent: "/friends/requests/sent",
-  status: (peerUserId: string) =>
-    `/friends/status/${encodeURIComponent(peerUserId)}`,
-  accept: (requestId: string) =>
-    `/friends/${encodeURIComponent(requestId)}/accept`,
-  reject: (requestId: string) =>
-    `/friends/${encodeURIComponent(requestId)}/reject`,
-  cancel: (requestId: string) => `/friends/${encodeURIComponent(requestId)}`,
-} as const;
+} from "./friendsTypes";
+import { mapDirectoryUsers } from "./mapDirectoryUser";
+import type { DirectoryUser } from "./usersTypes";
 
 export const friendsApi = {
   async listFriends(): Promise<DirectoryUser[]> {
-    const data = await apiClient.request<unknown>(FRIENDS.list, {
+    const data = await apiClient.request<unknown>(friendsEndpoints.list, {
       method: "GET",
       auth: true,
     });
@@ -34,7 +21,7 @@ export const friendsApi = {
   },
 
   async listIncoming(currentUserId?: string): Promise<FriendRequestRecord[]> {
-    const data = await apiClient.request<unknown>(FRIENDS.incoming, {
+    const data = await apiClient.request<unknown>(friendsEndpoints.incoming, {
       method: "GET",
       auth: true,
     });
@@ -43,7 +30,7 @@ export const friendsApi = {
   },
 
   async listSent(currentUserId?: string): Promise<FriendRequestRecord[]> {
-    const data = await apiClient.request<unknown>(FRIENDS.sent, {
+    const data = await apiClient.request<unknown>(friendsEndpoints.sent, {
       method: "GET",
       auth: true,
     });
@@ -62,16 +49,19 @@ export const friendsApi = {
   },
 
   async getStatus(peerUserId: string): Promise<FriendshipRecord> {
-    const data = await apiClient.request<unknown>(FRIENDS.status(peerUserId), {
-      method: "GET",
-      auth: true,
-    });
+    const data = await apiClient.request<unknown>(
+      friendsEndpoints.status(peerUserId),
+      {
+        method: "GET",
+        auth: true,
+      },
+    );
 
     return mapFriendshipStatus(data);
   },
 
   async sendRequest(recipientId: string): Promise<FriendshipRecord> {
-    const data = await apiClient.request<unknown>(FRIENDS.request, {
+    const data = await apiClient.request<unknown>(friendsEndpoints.request, {
       method: "POST",
       auth: true,
       body: { recipientId },
@@ -81,28 +71,37 @@ export const friendsApi = {
   },
 
   async accept(requestId: string): Promise<FriendshipRecord> {
-    const data = await apiClient.request<unknown>(FRIENDS.accept(requestId), {
-      method: "PATCH",
-      auth: true,
-    });
+    const data = await apiClient.request<unknown>(
+      friendsEndpoints.accept(requestId),
+      {
+        method: "PATCH",
+        auth: true,
+      },
+    );
 
     return mapFriendshipStatus(data);
   },
 
   async reject(requestId: string): Promise<FriendshipRecord> {
-    const data = await apiClient.request<unknown>(FRIENDS.reject(requestId), {
-      method: "PATCH",
-      auth: true,
-    });
+    const data = await apiClient.request<unknown>(
+      friendsEndpoints.reject(requestId),
+      {
+        method: "PATCH",
+        auth: true,
+      },
+    );
 
     return mapFriendshipStatus(data);
   },
 
   async cancel(requestId: string): Promise<FriendshipRecord> {
-    const data = await apiClient.request<unknown>(FRIENDS.cancel(requestId), {
-      method: "DELETE",
-      auth: true,
-    });
+    const data = await apiClient.request<unknown>(
+      friendsEndpoints.cancel(requestId),
+      {
+        method: "DELETE",
+        auth: true,
+      },
+    );
 
     return mapFriendshipStatus(data);
   },
